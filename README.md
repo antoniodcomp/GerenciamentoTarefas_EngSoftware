@@ -14,55 +14,39 @@ Como o React deve consumir/escutar esses dois fluxos.
 Evite respostas genéricas. Foque nas dores de manter o estado do frontend (React) sincronizado com o banco de dados via Django em um ambiente colaborativo.
 
 # Estrutura do projeto
+```text
 gerenciador-projetos/
-├── .github/                      # Configurações exclusivas do GitHub
-│   ├── workflows/                # Pipelines de CI/CD (ex: deploy.yml, tests.yml)
-│   └── pull_request_template.md  # Template padrão para novos PRs
+├── .github/                      # Configurações do GitHub (Pipelines CI/CD, templates)
 │
 ├── backend/                      # Aplicação Django (API REST + Channels)
-│   ├── core/                     # Configurações principais do projeto
-│   │   ├── __init__.py
-│   │   ├── asgi.py               # Ponto de entrada p/ Channels/WebSockets e Uvicorn
-│   │   ├── wsgi.py               # Ponto de entrada p/ requisições HTTP normais
-│   │   ├── settings.py           # Configurações (apps, banco, Redis, etc)
-│   │   └── urls.py               # Roteamento raiz da REST API
-│   │
-│   ├── boards/                   # App responsável pelos quadros, listas e cards
-│   │   ├── __init__.py
-│   │   ├── admin.py
-│   │   ├── apps.py
-│   │   ├── consumers.py          # Lógica do WebSocket (receber/enviar eventos)
-│   │   ├── models.py             # Board, List, Card
-│   │   ├── routing.py            # Roteamento das URLs do WebSocket (ws://)
-│   │   ├── serializers.py        # Tradução dos models para JSON (DRF)
-│   │   ├── urls.py               # Rotas REST deste app
-│   │   └── views.py              # ViewSets com a lógica de CRUD e broadcast
-│   │
-│   ├── users/                    # App genérico para gestão de usuários/autenticação
-│   │
-│   ├── manage.py                 # CLI do Django
-│   ├── requirements.txt          # Dependências do Python (Django, djangorestframework, channels, redis)
+│   ├── core/                     # Configurações principais (settings, urls globais, asgi/wsgi)
+│   ├── boards/                   # App Django: Domínio de Quadros, Listas e Cards
+│   │   ├── consumers.py          # Lógica do WebSocket (real-time)
+│   │   ├── models.py             # Modelos de banco de dados (Board, List, Card)
+│   │   ├── routing.py            # Roteamento de URLs do WebSocket
+│   │   ├── serializers.py        # Serializadores do DRF
+│   │   ├── urls.py               # Rotas REST do app
+│   │   └── views.py              # ViewSets (REST API)
+│   ├── users/                    # App Django: Gestão de usuários e autenticação
+│   ├── manage.py                 # CLI principal do Django
+│   ├── requirements.txt          # Dependências do Python
 │   └── .env.example              # Exemplo de variáveis de ambiente do backend
 │
-├── frontend/                     # Aplicação React
-│   ├── public/                   # Arquivos estáticos (index.html, favicon)
+├── frontend/                     # Aplicação React (SPA)
+│   ├── public/                   # Arquivos estáticos
 │   ├── src/
-│   │   ├── assets/               # Imagens, SVGs, fontes
-│   │   ├── components/           # Componentes reutilizáveis (Button, Modal, CardItem)
-│   │   ├── contexts/             # React Contexts (ex: AuthContext, WebSocketContext)
-│   │   ├── hooks/                # Custom hooks (ex: useWebSocket, useBoard)
-│   │   ├── pages/                # Componentes de página (ex: BoardView, Dashboard)
-│   │   ├── services/             # Comunicação com o backend
-│   │   │   ├── api.js            # Configuração do Axios para o DRF
-│   │   │   └── websocket.js      # Lógica de conexão com o Django Channels
-│   │   ├── store/                # Gerenciamento de estado global (Zustand ou Redux)
-│   │   ├── App.jsx               # Ponto de entrada de rotas da UI
-│   │   └── main.jsx              # Ponto de montagem do React
-│   │
-│   ├── package.json              # Dependências do Node.js (React, Axios, etc)
-│   ├── vite.config.js            # Configuração do bundler (assumindo Vite)
-│   └── .env.example              # Exemplo de variáveis de ambiente do frontend (VITE_API_URL, VITE_WS_URL)
+│   │   ├── components/           # Componentes visuais reutilizáveis
+│   │   ├── contexts/             # Contextos globais (Auth, WebSocket)
+│   │   ├── pages/                # Telas principais da aplicação (ex: BoardView)
+│   │   ├── services/             # Integração com backend (api.js para REST, websocket.js para WS)
+│   │   ├── store/                # Gerenciamento de estado global (Zustand/Redux)
+│   │   ├── App.jsx               # Ponto de entrada das rotas React
+│   │   └── main.jsx              # Ponto de montagem da aplicação
+│   ├── package.json              # Dependências do ecossistema Node.js
+│   ├── vite.config.js            # Configuração do bundler (Vite)
+│   └── .env.example              # Exemplo de variáveis de ambiente do frontend
 │
-├── docker-compose.yml            # Orquestração local (sobe o Postgres, Redis, Django e React com um comando)
-├── .gitignore                    # Ignora node_modules, venv, .env, db.sqlite3, etc
-└── README.md                     # Documentação de como rodar o projeto
+├── docker-compose.yml            # Orquestração de containers (PostgreSQL, Redis, Backend, Frontend)
+├── .gitignore                    # Arquivos e pastas ignorados pelo Git
+└── README.md                     # Documentação principal do projeto
+```
