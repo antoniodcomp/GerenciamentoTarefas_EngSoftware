@@ -1,13 +1,26 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-class CustomUser(AbstractUser):
-    # Tornamos o email obrigatório e único no sistema
-    email = models.EmailField(unique=True)
+class Usuario(AbstractUser):
+    ADMINISTRADOR = 'ADMINISTRADOR'
+    GESTOR = 'GESTOR'
+    COMUM = 'COMUM'
+    TIPO_CHOICES = [
+        (ADMINISTRADOR, 'Administrador'),
+        (GESTOR, 'Gestor'),
+        (COMUM, 'Comum'),
+    ]
 
-    # Definimos que o email será o campo de login (substituindo o username)
+    nome = models.CharField(max_length=255)
+    email = models.EmailField(unique=True)
+    cargoProfissional = models.CharField(max_length=255)
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default=COMUM)
+
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username'] # Mantido apenas por exigência do Django base
+    REQUIRED_FIELDS = ['username']
+
+    class Meta:
+        db_table = 'Usuario'
 
     def __str__(self):
-        return self.email
+        return f"{self.nome} ({self.email})"
