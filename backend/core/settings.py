@@ -1,19 +1,19 @@
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Carrega as senhas do arquivo .env
+load_dotenv()
 
 # Caminho base do projeto
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# CHAVE DE SEGURANÇA (Apenas para desenvolvimento local)
-SECRET_KEY = 'django-insecure-chave-temporaria-para-projeto-de-faculdade'
+SECRET_KEY = 'django-insecure-chave-secreta-para-desenvolvimento'
 
-# Modo de Desenvolvimento Ativo (Resolve o erro anterior!)
 DEBUG = True
 
-# Permite rodar no seu computador local
 ALLOWED_HOSTS = ['*']
 
-# Configuração dos Apps do Django
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -21,7 +21,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'users',  # O app de usuários que já está na estrutura de vocês
+    
+    'users',
+    'boards',
 ]
 
 MIDDLEWARE = [
@@ -54,28 +56,30 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-# Banco de dados padrão (SQLite - cria um arquivo local automaticamente)
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_NAME', 'gerenciador_db'),
+        'USER': os.environ.get('DB_USER', 'postgres'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', '12345'),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
 
-# Validação de senhas
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
 ]
 
-# Internacionalização (Configurado para o Brasil)
 LANGUAGE_CODE = 'pt-br'
 TIME_ZONE = 'America/Sao_Paulo'
 USE_I18N = True
 USE_TZ = True
 
-# Arquivos estáticos
 STATIC_URL = 'static/'
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+AUTH_USER_MODEL = 'users.Usuario'
