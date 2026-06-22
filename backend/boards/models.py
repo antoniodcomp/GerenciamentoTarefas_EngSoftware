@@ -2,11 +2,18 @@ from django.db import models
 from django.conf import settings
 
 class Projeto(models.Model):
-    
     nome = models.CharField(max_length=255)
+    descricao = models.TextField(blank=True, null=True)  # Nossa task
     dataInicio = models.DateTimeField(blank=True, null=True)
     dataFim = models.DateTimeField(blank=True, null=True)
-
+    dono = models.ForeignKey(  # Nossa task
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='projetos_proprios',
+        null=True,
+        blank=True
+    )
+    criado_em = models.DateTimeField(auto_now_add=True, null=True, blank=True)  # Nossa task
     participantes = models.ManyToManyField(
         settings.AUTH_USER_MODEL, 
         related_name='projetos_participando'
@@ -34,10 +41,7 @@ class Tarefa(models.Model):
     dataInicio = models.DateTimeField(blank=True, null=True)
     dataFim = models.DateTimeField(blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDENTE)
-    
-    
     projeto = models.ForeignKey(Projeto, on_delete=models.CASCADE, related_name='tarefas')
-
     participantes = models.ManyToManyField(
         settings.AUTH_USER_MODEL, 
         related_name='tarefas_participando'
@@ -65,10 +69,7 @@ class Subtarefa(models.Model):
     dataInicio = models.DateTimeField(blank=True, null=True)
     dataFim = models.DateTimeField(blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDENTE)
-    
-    
     tarefa = models.ForeignKey(Tarefa, on_delete=models.CASCADE, related_name='subtarefas')
-
     participantes = models.ManyToManyField(
         settings.AUTH_USER_MODEL, 
         related_name='subtarefas_participando'
@@ -85,11 +86,7 @@ class Anexo(models.Model):
     nomeArquivo = models.CharField(max_length=255, blank=True, null=True)
     caminhoArquivo = models.CharField(max_length=255)
     dataHoraUpload = models.DateTimeField(auto_now_add=True)
-
-    
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='anexos')
-    
-    
     tarefa = models.ForeignKey(Tarefa, on_delete=models.CASCADE, related_name='anexos')
 
     class Meta:
@@ -102,7 +99,6 @@ class Anexo(models.Model):
 class ComentarioTarefa(models.Model):
     texto = models.CharField(max_length=255)
     data = models.DateTimeField(auto_now_add=True)
-    
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='comentarios_tarefas')
     tarefa = models.ForeignKey(Tarefa, on_delete=models.CASCADE, related_name='comentarios')
 
@@ -116,7 +112,6 @@ class ComentarioTarefa(models.Model):
 class ComentarioSubtarefa(models.Model):
     texto = models.CharField(max_length=255)
     data = models.DateTimeField(auto_now_add=True)
-    
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='comentarios_subtarefas')
     subtarefa = models.ForeignKey(Subtarefa, on_delete=models.CASCADE, related_name='comentarios')
 
