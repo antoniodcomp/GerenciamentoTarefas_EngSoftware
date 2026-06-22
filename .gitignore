@@ -1,0 +1,19 @@
+# Ambientes Virtuais (Essencial!)
+venv/
+ENV/
+env/
+
+# Configurações locais / Chaves
+.env
+
+# Banco de dados local temporário (SQLite)
+*.sqlite3
+
+# Arquivos temporários que o Python gera sozinho
+**/__pycache__/
+*.py[cod]
+
+# Arquivos do VS Code ou do sistema operacional
+.vscode/
+.DS_Store
+Thumbs.db
