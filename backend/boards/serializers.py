@@ -1,17 +1,26 @@
 from rest_framework import serializers
 from datetime import date
-from .models import Project
+from .models import Projeto
 
 class ProjectSerializer(serializers.ModelSerializer):
-    # O owner é definido como read_only para que o backend defina-o de forma segura a partir do usuário autenticado
-    owner = serializers.PrimaryKeyRelatedField(read_only=True)
+    # Mapeamento do frontend (inglês) para o banco de dados (português)
+    name = serializers.CharField(source='nome')
+    description = serializers.CharField(source='descricao', required=False, allow_blank=True, allow_null=True)
+    deadline = serializers.DateTimeField(source='dataFim')
+    created_at = serializers.DateTimeField(source='criado_em', read_only=True)
+    owner = serializers.PrimaryKeyRelatedField(source='dono', read_only=True)
 
     class Meta:
-        model = Project
+        model = Projeto
         fields = ['id', 'name', 'description', 'deadline', 'created_at', 'owner']
 
     def validate_deadline(self, value):
-        # Sobrescrita da validação do prazo: impede datas anteriores à data de hoje
-        if value < date.today():
+        # Validação do prazo final impedindo datas anteriores ao dia atual
+        if hasattr(value, 'date'):
+            value_date = value.date()
+        else:
+            value_date = value
+
+        if value_date < date.today():
             raise serializers.ValidationError("O prazo final do projeto não pode ser uma data no passado.")
         return value
