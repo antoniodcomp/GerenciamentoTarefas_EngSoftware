@@ -4,3 +4,5 @@ psycopg2-binary==2.9.12
 python-dotenv==1.0.1
 sqlparse==0.5.5
 tzdata==2026.2
+django-cors-headers==4.9.0
+djangorestframework==3.17.1

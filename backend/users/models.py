@@ -21,6 +21,9 @@ class Usuario(AbstractUser):
     cargoProfissional = models.CharField(max_length=255)
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default=COMUM)
 
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
+
     class Meta:
         db_table = 'Usuario'
 
