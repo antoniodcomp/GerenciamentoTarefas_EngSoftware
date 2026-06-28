@@ -2,19 +2,23 @@ import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import TelaProjetos from './pages/TelaProjetos'
 import TelaCadastroProjeto from './pages/TelaCadastroProjeto'
+import TelaLogin from './pages/TelaLogin' // <-- Seu Import
+import TelaCadastroUsuario from './pages/TelaCadastroUsuario' // <-- Seu Import
 import './App.css'
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Roda raiz redireciona para a lista de projetos */}
-        <Route path="/" element={<Navigate to="/projetos" replace />} />
+        {/* Rota raiz agora redireciona para o Login por segurança */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
         
-        {/* Rota para listar projetos */}
+        {/* Novas rotas de Autenticação que você criou */}
+        <Route path="/login" element={<TelaLogin />} />
+        <Route path="/cadastro" element={<TelaCadastroUsuario />} />
+        
+        {/* Rotas de Projetos do seu colega */}
         <Route path="/projetos" element={<TelaProjetos />} />
-        
-        {/* Rota para criar um novo projeto */}
         <Route path="/projetos/novo" element={<TelaCadastroProjeto />} />
       </Routes>
     </BrowserRouter>
