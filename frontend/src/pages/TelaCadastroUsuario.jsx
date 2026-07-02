@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { register } from '../services/api';
 
 function TelaCadastroUsuario() {
   const [nome, setNome] = useState('');
@@ -7,7 +8,7 @@ function TelaCadastroUsuario() {
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (senha.length < 6) {
@@ -18,6 +19,13 @@ function TelaCadastroUsuario() {
     if (senha !== confirmarSenha) {
       alert('As senhas não coincidem!');
       return;
+    }
+
+    try {
+      const response = await register({ nome, email, senha });
+      Navigate('/login');    
+    } catch (error) {
+      
     }
 
     console.log('Dados de Cadastro:', { nome, email, senha });
