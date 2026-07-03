@@ -1,6 +1,9 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from datetime import date
 from .models import Projeto
+
+User = get_user_model()
 
 class ProjectSerializer(serializers.ModelSerializer):
     # Mapeamento do frontend (inglês) para o banco de dados (português)
@@ -9,10 +12,16 @@ class ProjectSerializer(serializers.ModelSerializer):
     deadline = serializers.DateTimeField(source='dataFim')
     created_at = serializers.DateTimeField(source='criado_em', read_only=True)
     owner = serializers.PrimaryKeyRelatedField(source='dono', read_only=True)
+    participantes = serializers.PrimaryKeyRelatedField(
+            queryset=User.objects.all(), 
+            many=True, 
+            required=False
+        )
+
 
     class Meta:
         model = Projeto
-        fields = ['id', 'name', 'description', 'deadline', 'created_at', 'owner']
+        fields = ['id', 'name', 'description', 'deadline', 'created_at', 'owner', 'participantes']
 
     def validate_deadline(self, value):
         # Validação do prazo final impedindo datas anteriores ao dia atual

@@ -35,4 +35,14 @@ export const createProject = async (projectData) => {
   return response.data;
 };
 
+export const login = async (credentials) => {
+  const response = await api.post('users/login/', credentials);
+  return response.data;
+};
+
+export const register = async (credentials) => {
+  const response = await api.post('users/registro/', credentials);
+  return response.data;
+};
+
 export default api;

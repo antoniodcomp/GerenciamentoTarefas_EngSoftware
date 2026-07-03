@@ -1,16 +1,21 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { register } from '../services/api';
 
 function TelaCadastroUsuario() {
-  const [nome, setNome] = useState('');
+  const [nome, setNome]   = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [erro, setErro]   = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
 
-  const handleSubmit = (e) => {
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    setErro('');
     e.preventDefault();
     
-    if (senha.length < 6) {
+    if (senha.length < 8) {
         alert('A senha deve conter pelo menos 6 caracteres!');
         return;
     }
@@ -20,8 +25,29 @@ function TelaCadastroUsuario() {
       return;
     }
 
+    try {
+      const response = await register({ email: email, 
+                                        nome: nome, 
+                                        cargoProfissional: 'desenvolvedor',
+                                         password: senha });
+      navigate('/login');    
+      alert(`Usuário ${nome} cadastrado com sucesso!`);
+    } catch (error) {
+      console.error('Erro de registro:', error);
+      if (error.response && error.response.data) {
+        // Concatena as mensagens de erro retornadas pela API (ex: e-mail já cadastrado)
+        const mensagens = Object.entries(error.response.data)
+          .map(([campo, erros]) => `${campo}: ${erros.join(', ')}`)
+          .join('\n');
+        setErro(mensagens);
+        alert(`Erro no cadastro:\n${mensagens}`);
+      } else {
+        setErro('Não foi possível conectar ao servidor. Tente novamente.');
+      }
+
+    }
+
     console.log('Dados de Cadastro:', { nome, email, senha });
-    alert(`Usuário ${name} cadastrado com sucesso!\n(Simulação)`);
   };
 
   return (

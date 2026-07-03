@@ -1,14 +1,32 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { login } from '../services/api';
 
 function TelaLogin() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [erro, setErro] = useState('');
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     console.log('Dados de Login:', { email, senha });
-    alert(`Tentando logar com o e-mail: ${email}`);
+    // alert(`Tentando logar com o e-mail: ${email}`);
+    setErro('');
+
+    try {
+      const response = await login({ email, password: senha });
+      localStorage.setItem('token', response.access);
+      navigate('/projetos');
+    } catch (error) {
+      console.error('Erro de login:', error);
+      if (erros.response && error.response.status === 401) {
+        setErro('E-mail ou senha incorretos.');
+      } else {
+        setErro('Erro inesperado, checar console');
+      }
+
+    }
   };
 
   return (
@@ -20,6 +38,8 @@ function TelaLogin() {
       <div style={styles.card}>
         <h2 style={styles.title}>Login</h2>
         <p style={styles.subtitle}>Insira suas credenciais para entrar no sistema</p>
+
+        {erro && <div style={styles.errorMessage}>{erro}</div>}
         
         <form onSubmit={handleSubmit} style={styles.form}>
           <div style={styles.inputGroup}>
@@ -128,7 +148,17 @@ const styles = {
     boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
   },
   footer: { marginTop: '28px', textAlign: 'center', fontSize: '14px', color: '#64748b' },
-  link: { color: '#2563eb', textDecoration: 'none', fontWeight: '500' }
+  link: { color: '#2563eb', textDecoration: 'none', fontWeight: '500' },
+  errorMessage: {
+        color: '#e11d48',
+        backgroundColor: '#ffe4e6',
+        border: '1px solid #fecdd3',
+        padding: '10px 14px',
+        borderRadius: '8px',
+        fontSize: '14px',
+        marginBottom: '20px',
+        textAlign: 'center',
+      }
 };
 
 export default TelaLogin;
