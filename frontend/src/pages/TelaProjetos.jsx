@@ -91,7 +91,12 @@ function TelaProjetos() {
       {!loading && !error && filteredProjects.length > 0 && (
         <div style={styles.grid}>
           {filteredProjects.map((project) => (
-            <div key={project.id} style={styles.card}>
+            <div 
+              key={project.id} 
+              style={{ ...styles.card, cursor: 'pointer' }}
+              onClick={() => navigate(`/projetos/${project.id}/dashboard`)}
+              title="Clique para ver o dashboard deste projeto"
+            >
               <div>
                 <h3 style={styles.projectTitle}>{project.name}</h3>
                 <p style={styles.projectDesc}>

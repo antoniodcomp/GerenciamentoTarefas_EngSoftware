@@ -35,6 +35,30 @@ export const createProject = async (projectData) => {
   return response.data;
 };
 
+// Requisição GET para obter os dados do dashboard de um projeto
+export const getProjectDashboard = async (projectId) => {
+  const response = await api.get(`projects/${projectId}/dashboard/`);
+  return response.data;
+};
+
+// Requisição POST para criar uma nova tarefa (UC15)
+export const createProjectTarefa = async (taskData) => {
+  const response = await api.post('tasks/', taskData);
+  return response.data;
+};
+
+// Requisição GET para obter detalhes de uma única tarefa
+export const getTaskDetails = async (taskId) => {
+  const response = await api.get(`tasks/${taskId}/`);
+  return response.data;
+};
+
+// Requisição POST para criar uma nova subtarefa (UC28)
+export const createSubtask = async (subtaskData) => {
+  const response = await api.post('subtasks/', subtaskData);
+  return response.data;
+};
+
 export const login = async (credentials) => {
   const response = await api.post('users/login/', credentials);
   return response.data;
