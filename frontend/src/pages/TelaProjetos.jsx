@@ -107,9 +107,29 @@ function TelaProjetos() {
                   <span style={styles.infoLabel}>Criado em:</span>
                   <span style={styles.infoValue}>{formatDate(project.created_at)}</span>
                 </div>
-                <div style={styles.ownerBadge}>
-                  Dono: Gestor
+                <div style={styles.footerRow}>                                                                                                                   
+                  <div style={styles.membersIndicator} title={`${project.participantes?.length || 0} membros no projeto`}>                                       
+                    <svg                                                                                                                                         
+                      xmlns="http://www.w3.org/2000/svg"                                                                                                         
+                      width="16"                                                                                                                                 
+                      height="16"                                                                                                                                
+                      viewBox="0 0 24 24"                                                                                                                        
+                      fill="none"                                                                                                                                
+                      stroke="currentColor"                                                                                                                      
+                      strokeWidth="2"                                                                                                                            
+                      strokeLinecap="round"                                                                                                                      
+                      strokeLinejoin="round"                                                                                                                     
+                      style={{ marginRight: '6px', opacity: 0.8 }}                                                                                               
+                    >                                                                                                                                            
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />                                                                                     
+                      <circle cx="9" cy="7" r="4" />                                                                                                             
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />                                                                                                    
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75" />                                                                                                     
+                    </svg>
+                    <span>{(project.participantes?.length || 0)+1} membros</span>
+                  </div>
                 </div>
+
               </div>
             </div>
           ))}
@@ -223,15 +243,27 @@ const styles = {
     color: 'var(--text-h)'
   },
   ownerBadge: {
-    alignSelf: 'flex-start',
     backgroundColor: 'var(--accent-bg)',
     color: 'var(--accent)',
     fontSize: '12px',
     fontWeight: '500',
     padding: '4px 10px',
     borderRadius: '20px',
-    marginTop: '5px'
   },
+  footerRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: '10px',
+  },
+  membersIndicator: {
+    display: 'flex',
+    alignItems: 'center',
+    fontSize: '13px',
+    color: 'var(--text)',
+    fontWeight: '500',
+  },
+
   stateMessage: {
     textAlign: 'center',
     padding: '40px',
