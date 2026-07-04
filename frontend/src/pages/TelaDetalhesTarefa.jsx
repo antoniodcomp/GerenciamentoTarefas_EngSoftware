@@ -121,7 +121,7 @@ function TelaDetalhesTarefa() {
             <h3 style={{ color: 'var(--text-h)', margin: 0 }}>Subtarefas</h3>
             <button 
               onClick={() => setShowSubtaskForm(!showSubtaskForm)}
-              style={{ padding: '6px 12px', backgroundColor: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+              style={{ padding: '6px 12px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
             >
               {showSubtaskForm ? 'Cancelar' : '+ Nova Subtarefa'}
             </button>
@@ -163,7 +163,7 @@ function TelaDetalhesTarefa() {
                 <button 
                   type="submit" 
                   disabled={submitting}
-                  style={{ padding: '10px 20px', backgroundColor: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '4px', cursor: submitting ? 'not-allowed' : 'pointer' }}
+                  style={{ padding: '10px 20px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '4px', cursor: submitting ? 'not-allowed' : 'pointer' }}
                 >
                   {submitting ? 'Salvando...' : 'Salvar Subtarefa'}
                 </button>
