@@ -4,22 +4,6 @@ from django.utils import timezone
 from datetime import timedelta  
 import random                   
 
-
-class CodigoRecuperacao(models.Model):
-    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='codigos_recuperacao')                                                            
-    codigo = models.CharField(max_length=6)                                                                                                                       
-    criado_em = models.DateTimeField(auto_now_add=True)                                                                                                           
-    usado = models.BooleanField(default=False) 
-
-    def is_valid(self):
-        return (not self.usado) and (timezone.now() < self.criado_em + timedelta(minutes=10))
-    
-    @classmethod
-    def gerar_codigo(cls, usuario):
-        cls.objects.filter(usuario=usuario, usado=False).update(usado=True)
-        codigo = f'{random.randint(100000, 999999)}'
-        return cls.objects.create(usuario=usuario, codigo=codigo)
-
 class Usuario(AbstractUser):
     ADMINISTRADOR = 'ADMINISTRADOR'
     GESTOR = 'GESTOR'
@@ -48,3 +32,19 @@ class Usuario(AbstractUser):
 
     def __str__(self):
         return f"{self.nome} ({self.email})"
+    
+
+class CodigoRecuperacao(models.Model):
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='codigos_recuperacao')                                                            
+    codigo = models.CharField(max_length=6)                                                                                                                       
+    criado_em = models.DateTimeField(auto_now_add=True)                                                                                                           
+    usado = models.BooleanField(default=False) 
+
+    def is_valid(self):
+        return (not self.usado) and (timezone.now() < self.criado_em + timedelta(minutes=10))
+    
+    @classmethod
+    def gerar_codigo(cls, usuario):
+        cls.objects.filter(usuario=usuario, usado=False).update(usado=True)
+        codigo = f'{random.randint(100000, 999999)}'
+        return cls.objects.create(usuario=usuario, codigo=codigo)

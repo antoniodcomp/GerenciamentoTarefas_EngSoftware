@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { login } from '../services/api';
+import { login, solicitarCodigoRecuperacao } from '../services/api';
 
 function TelaLogin() {
   const [email, setEmail] = useState('');
@@ -11,7 +11,6 @@ function TelaLogin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log('Dados de Login:', { email, senha });
-    // alert(`Tentando logar com o e-mail: ${email}`);
     setErro('');
 
     try {
@@ -20,12 +19,26 @@ function TelaLogin() {
       navigate('/projetos');
     } catch (error) {
       console.error('Erro de login:', error);
-      if (erros.response && error.response.status === 401) {
+      if (error.response && error.response.status === 401) {
         setErro('E-mail ou senha incorretos.');
       } else {
         setErro('Erro inesperado, checar console');
       }
+    }
+  };
 
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setErro('Por favor, informe seu e-mail no campo acima antes de solicitar a recuperação.');
+      return;
+    }
+    setErro('');
+    try {
+      await solicitarCodigoRecuperacao(email);
+      navigate('/reconfirmar-senha', { state: { email } });
+    } catch (error) {
+      console.error(error);
+      setErro(error.response?.data?.error || 'Erro ao enviar código de recuperação.');
     }
   };
 
@@ -55,9 +68,14 @@ function TelaLogin() {
           </div>
           
           <div style={styles.inputGroup}>
-            <label style={styles.label}>Senha</label>
+            <div style={styles.labelRow}>
+              <label style={styles.label}>Senha</label>
+              <span onClick={handleForgotPassword} style={styles.forgotPassword}>
+                Esqueci minha senha?
+              </span>
+            </div>
             <input 
-              type="senha" 
+              type="password" 
               required
               placeholder="Sua senha"
               value={senha}
@@ -113,8 +131,8 @@ const styles = {
   card: { 
     backgroundColor: '#ffffff', 
     padding: '40px', 
-    borderRadius: '12px', // Bordas arredondadas do padrão do protótipo
-    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03)', // Sombra super leve
+    borderRadius: '12px',
+    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03)',
     border: '1px solid #e2e8f0',
     width: '100%', 
     maxWidth: '420px',
@@ -124,7 +142,20 @@ const styles = {
   subtitle: { margin: '0 0 32px 0', textAlign: 'center', color: '#64748b', fontSize: '14px', lineHeight: '1.5' },
   form: { display: 'flex', flexDirection: 'column', gap: '20px' },
   inputGroup: { display: 'flex', flexDirection: 'column', gap: '8px' },
+  labelRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   label: { fontSize: '14px', fontWeight: '500', color: '#334155' },
+  forgotPassword: {
+    fontSize: '13px',
+    color: '#2563eb',
+    cursor: 'pointer',
+    fontWeight: '500',
+    transition: 'color 0.2s',
+    userSelect: 'none',
+  },
   input: { 
     padding: '12px 16px', 
     borderRadius: '8px', 
@@ -150,15 +181,15 @@ const styles = {
   footer: { marginTop: '28px', textAlign: 'center', fontSize: '14px', color: '#64748b' },
   link: { color: '#2563eb', textDecoration: 'none', fontWeight: '500' },
   errorMessage: {
-        color: '#e11d48',
-        backgroundColor: '#ffe4e6',
-        border: '1px solid #fecdd3',
-        padding: '10px 14px',
-        borderRadius: '8px',
-        fontSize: '14px',
-        marginBottom: '20px',
-        textAlign: 'center',
-      }
+    color: '#e11d48',
+    backgroundColor: '#ffe4e6',
+    border: '1px solid #fecdd3',
+    padding: '10px 14px',
+    borderRadius: '8px',
+    fontSize: '14px',
+    marginBottom: '20px',
+    textAlign: 'center',
+  }
 };
 
 export default TelaLogin;
