@@ -105,6 +105,8 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
 }
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 EMAIL_BACKEND = 'core.email_backend.CustomEmailBackend'
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp-relay.brevo.com')   
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))            

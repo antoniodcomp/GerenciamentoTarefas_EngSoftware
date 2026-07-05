@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getProjectDashboard, createProjectTarefa } from '../services/api';
+import { getProjectDashboard, createProjectTarefa, updateTaskStatus } from '../services/api';
 
 function TelaDashboard() {
   const { id } = useParams();
@@ -69,6 +69,19 @@ function TelaDashboard() {
       }
     } finally {
       setTaskLoading(false);
+    }
+  };
+
+  const handleTaskStatusChange = async (taskId, newStatus, e) => {
+    e.stopPropagation(); // Previne o redirecionamento ao clicar no select
+    try {
+      await updateTaskStatus(taskId, newStatus);
+      // Recarrega o dashboard para atualizar as estatísticas e a barra de progresso
+      const res = await getProjectDashboard(id);
+      setData(res);
+    } catch (err) {
+      console.error('Error updating task status:', err);
+      alert('Erro ao atualizar status da tarefa');
     }
   };
 
@@ -167,7 +180,16 @@ function TelaDashboard() {
               >
                 <div>
                   <strong>{task.nome}</strong>
-                  <span style={styles.taskStatus}>{task.status}</span>
+                  <select 
+                    value={task.status} 
+                    onChange={(e) => handleTaskStatusChange(task.id, e.target.value, e)}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ ...styles.taskStatus, border: 'none', cursor: 'pointer', outline: 'none' }}
+                  >
+                    <option value="PENDENTE">PENDENTE</option>
+                    <option value="EM_ANDAMENTO">EM ANDAMENTO</option>
+                    <option value="CONCLUIDA">CONCLUÍDA</option>
+                  </select>
                 </div>
                 <div style={{ color: '#ef4444' }}>
                   Prazo: {formatDate(task.dataFim)}
@@ -196,7 +218,16 @@ function TelaDashboard() {
               >
                 <div>
                   <strong>{task.nome}</strong>
-                  <span style={getTaskBadgeStyle(task.status)}>{task.status}</span>
+                  <select 
+                    value={task.status} 
+                    onChange={(e) => handleTaskStatusChange(task.id, e.target.value, e)}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ ...getTaskBadgeStyle(task.status), border: 'none', cursor: 'pointer', outline: 'none' }}
+                  >
+                    <option value="PENDENTE">PENDENTE</option>
+                    <option value="EM_ANDAMENTO">EM ANDAMENTO</option>
+                    <option value="CONCLUIDA">CONCLUÍDA</option>
+                  </select>
                 </div>
                 <div style={{ color: 'var(--text)', fontSize: '14px' }}>
                   Prazo: {formatDate(task.dataFim)}

@@ -84,7 +84,7 @@ class Subtarefa(models.Model):
 
 class Anexo(models.Model):
     nomeArquivo = models.CharField(max_length=255, blank=True, null=True)
-    caminhoArquivo = models.CharField(max_length=255)
+    caminhoArquivo = models.FileField(upload_to='anexos/')
     dataHoraUpload = models.DateTimeField(auto_now_add=True)
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='anexos')
     tarefa = models.ForeignKey(Tarefa, on_delete=models.CASCADE, related_name='anexos')

@@ -3,8 +3,10 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
-from .models import Projeto, Tarefa, Subtarefa
-from .serializers import ProjectSerializer, ProjectDashboardSerializer, TaskCreateSerializer, SubtaskCreateSerializer, TaskDetailSerializer
+from .models import Projeto, Tarefa, Subtarefa, Anexo, ComentarioTarefa
+from .serializers import ProjectSerializer, ProjectDashboardSerializer, TaskCreateSerializer, SubtaskCreateSerializer, TaskDetailSerializer, AnexoSerializer, ComentarioTarefaSerializer, TaskUpdateSerializer, SubtaskUpdateSerializer
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.exceptions import PermissionDenied
 from django.db.models import Q
 
 class ProjectViewSet(viewsets.ModelViewSet):
@@ -132,11 +134,17 @@ class TaskViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'retrieve':
             return TaskDetailSerializer
+        if self.action in ['update', 'partial_update']:
+            return TaskUpdateSerializer
         return TaskCreateSerializer
 
 class SubtaskViewSet(viewsets.ModelViewSet):
-    serializer_class = SubtaskCreateSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.action in ['update', 'partial_update']:
+            return SubtaskUpdateSerializer
+        return SubtaskCreateSerializer
 
     def get_queryset(self):
         user = self.request.user
@@ -162,3 +170,44 @@ class SubtaskViewSet(viewsets.ModelViewSet):
         for responsavel in responsaveis:
             if responsavel != self.request.user:
                 print(f"[NOTIFICAÇÃO] Para {responsavel.username}: Nova subtarefa '{subtarefa.nome}' criada na tarefa '{tarefa.nome}' do projeto'{projeto.nome}'")
+
+class AnexoViewSet(viewsets.ModelViewSet):
+    serializer_class = AnexoSerializer
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get_queryset(self):
+        user = self.request.user
+        return Anexo.objects.filter(
+            Q(tarefa__projeto__dono=user) | Q(tarefa__projeto__participantes=user)
+        ).distinct()
+
+    def perform_create(self, serializer):
+        tarefa = serializer.validated_data.get('tarefa')
+        projeto = tarefa.projeto
+        
+        # RF21: Permissão de Anexo (Gestores e Usuários Comuns podem anexar arquivos)
+        if projeto.dono != self.request.user and self.request.user not in projeto.participantes.all():
+            raise PermissionDenied("Você não tem permissão para anexar arquivos nesta tarefa.")
+            
+        serializer.save(usuario=self.request.user)
+
+class ComentarioTarefaViewSet(viewsets.ModelViewSet):
+    serializer_class = ComentarioTarefaSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        return ComentarioTarefa.objects.filter(
+            Q(tarefa__projeto__dono=user) | Q(tarefa__projeto__participantes=user)
+        ).distinct()
+
+    def perform_create(self, serializer):
+        tarefa = serializer.validated_data.get('tarefa')
+        projeto = tarefa.projeto
+        
+        # RF22 / UC24: Permissão de Comentário (Gestores e Usuários Comuns podem comentar)
+        if projeto.dono != self.request.user and self.request.user not in projeto.participantes.all():
+            raise PermissionDenied("Você não tem permissão para comentar nesta tarefa.")
+            
+        serializer.save(usuario=self.request.user)
