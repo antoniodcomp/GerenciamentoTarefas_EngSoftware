@@ -37,7 +37,10 @@ function TelaCadastroUsuario() {
       if (error.response && error.response.data) {
         // Concatena as mensagens de erro retornadas pela API (ex: e-mail já cadastrado)
         const mensagens = Object.entries(error.response.data)
-          .map(([campo, erros]) => `${campo}: ${erros.join(', ')}`)
+          .map(([campo, erros]) => {
+            const mensagemErro = Array.isArray(erros) ? erros.join(', ') : String(erros);
+            return `${campo}: ${mensagemErro}`;
+          })
           .join('\n');
         setErro(mensagens);
         alert(`Erro no cadastro:\n${mensagens}`);

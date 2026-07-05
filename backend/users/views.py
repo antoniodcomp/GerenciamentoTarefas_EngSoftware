@@ -1,9 +1,15 @@
 from django.http import JsonResponse
+from django.core.mail import send_mail                                                                                                                            
+from django.conf import settings                                                                                                                                  
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import AllowAny
-from .serializers import UserRegistrationSerializer
+from rest_framework.views import APIView                                                                                                                          
+from rest_framework.response import Response                                                                                                                      
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework import status                                                                                                                                 
 from .serializers import CustomTokenObtainPairSerializer
+from .serializers import UserRegistrationSerializer
+from .models import Usuario, CodigoRecuperacao
 
 def hello_backend(request):
     return JsonResponse({
@@ -18,3 +24,70 @@ class UserRegistrationView(CreateAPIView):
 class LoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
     permission_classes = [AllowAny]
+
+class PasswordResetRequestView(APIView):                                                                                                                          
+        permission_classes = [AllowAny]                                                                                                                               
+                                                                                                                                                                      
+        def post(self, request):                                                                                                                                      
+            email = request.data.get('email')                                                                                                                         
+            if not email:                                                                                                                                             
+                return Response({"error": "O e-mail é obrigatório."}, status=status.HTTP_400_BAD_REQUEST)                                                             
+                                                                                                                                                                      
+            try:                                                                                                                                                      
+                usuario = Usuario.objects.get(email=email)                                                                                                            
+            except Usuario.DoesNotExist:                                                                                                                                                                                                                      
+                return Response({"error": "E-mail não cadastrado no sistema."}, status=status.HTTP_404_NOT_FOUND)                                                     
+                                                                                                                                                                      
+            # Gera o código                                                                                                                                           
+            codigo_obj = CodigoRecuperacao.gerar_codigo(usuario)                                                                                                      
+                                                                                                                                                                      
+            # Dispara o e-mail                                                                                                          
+            try:                                                                                                                                                      
+                send_mail(                                                                                                                                            
+                    subject="Código de Recuperação de Senha",                                                                                                         
+                    message=f"Olá {usuario.nome},\n\nSeu código para redefinição de senha é: {codigo_obj.codigo}\n\nEste código expira em 10 minutos.",               
+                    from_email=settings.DEFAULT_FROM_EMAIL or "noreply@gestaotarefas.com",                                                                            
+                    recipient_list=[usuario.email],                                                                                                                   
+                    fail_silently=False,                                                                                                                              
+                )                                                                                                                                                     
+            except Exception as e:                                                                                                                                    
+                return Response({"error": f"Erro ao enviar o e-mail: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)                                        
+                                                                                                                                                                      
+            return Response({"message": "Código de recuperação enviado com sucesso."}, status=status.HTTP_200_OK)                                                     
+                                                                                                                                                                      
+                                                                                                                                                                      
+class PasswordResetConfirmView(APIView):                                                                                                                          
+    permission_classes = [AllowAny]                                                                                                                               
+                                                                                                                                                                    
+    def post(self, request):                                                                                                                                      
+        email = request.data.get('email')                                                                                                                         
+        codigo = request.data.get('codigo')                                                                                                                       
+        nova_senha = request.data.get('nova_senha')                                                                                                               
+                                                                                                                                                                    
+        if not all([email, codigo, nova_senha]):                                                                                                                  
+            return Response({"error": "Todos os campos (e-mail, código e nova senha) são obrigatórios."}, status=status.HTTP_400_BAD_REQUEST)                     
+                                                                                                                                                                    
+        try:                                                                                                                                                      
+            usuario = Usuario.objects.get(email=email)                                                                                                            
+        except Usuario.DoesNotExist:                                                                                                                              
+            return Response({"error": "Usuário não encontrado."}, status=status.HTTP_404_NOT_FOUND)                                                               
+                                                                                                                                                                    
+        # Busca o código correspondente                                                                                                                           
+        try:                                                                                                                                                      
+            codigo_obj = CodigoRecuperacao.objects.filter(usuario=usuario, codigo=codigo).latest('criado_em')                                                     
+        except CodigoRecuperacao.DoesNotExist:                                                                                                                    
+            return Response({"error": "Código de verificação incorreto."}, status=status.HTTP_400_BAD_REQUEST)                                                    
+                                                                                                                                                                    
+        # Valida validade e expiração                                                                                                                             
+        if not codigo_obj.is_valid():                                                                                                                             
+            return Response({"error": "O código expirou ou já foi utilizado."}, status=status.HTTP_400_BAD_REQUEST)                                               
+                                                                                                                                                                    
+        # Altera a senha do usuário                                                                                                                               
+        usuario.set_password(nova_senha)                                                                                                                          
+        usuario.save()                                                                                                                                            
+                                                                                                                                                                    
+        # Invalida o código marcando como usado                                                                                                                   
+        codigo_obj.usado = True                                                                                                                                   
+        codigo_obj.save()                                                                                                                                         
+                                                                                                                                                                    
+        return Response({"message": "Senha redefinida com sucesso!"}, status=status.HTTP_200_OK) 
