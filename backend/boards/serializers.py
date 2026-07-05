@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from datetime import date
-from .models import Projeto, Tarefa, Subtarefa
+from .models import Projeto, Tarefa, Subtarefa, Anexo, ComentarioTarefa
 
 User = get_user_model()
 
@@ -101,6 +101,11 @@ class TaskCreateSerializer(serializers.ModelSerializer):
             # Se quiser, podemos validar se a dataFim da tarefa ultrapassa a dataFim do Projeto.
             return value
 
+class TaskUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tarefa
+        fields = ['id', 'nome', 'descricao', 'dataFim', 'status']
+
 class SubtaskCreateSerializer(serializers.ModelSerializer):
     status = serializers.CharField(read_only=True)
 
@@ -118,16 +123,58 @@ class SubtaskCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("O prazo final da subtarefa é obrigatório.")
         return value
 
+class SubtaskUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subtarefa
+        fields = ['id', 'nome', 'descricao', 'dataFim', 'status']
+
 class SubtaskResumoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subtarefa
         fields = ['id', 'nome', 'status', 'dataFim']
 
+class AnexoSerializer(serializers.ModelSerializer):
+    usuario_nome = serializers.CharField(source='usuario.username', read_only=True)
+
+    class Meta:
+        model = Anexo
+        fields = ['id', 'nomeArquivo', 'caminhoArquivo', 'dataHoraUpload', 'usuario', 'usuario_nome', 'tarefa']
+        read_only_fields = ['usuario', 'dataHoraUpload']
+
+    def validate_caminhoArquivo(self, value):
+        # Limite de 5MB
+        max_size = 5 * 1024 * 1024
+        if value.size > max_size:
+            raise serializers.ValidationError("O arquivo não pode exceder 5MB.")
+            
+        # Formatos permitidos
+        valid_extensions = ['pdf', 'jpg', 'jpeg', 'png', 'txt', 'doc', 'docx']
+        ext = value.name.split('.')[-1].lower()
+        if ext not in valid_extensions:
+            raise serializers.ValidationError(f"Formato de arquivo não suportado. Formatos válidos: {', '.join(valid_extensions)}.")
+            
+        return value
+
+class ComentarioTarefaSerializer(serializers.ModelSerializer):
+    usuario_nome = serializers.CharField(source='usuario.username', read_only=True)
+
+    class Meta:
+        model = ComentarioTarefa
+        fields = ['id', 'texto', 'data', 'usuario', 'usuario_nome', 'tarefa']
+        read_only_fields = ['usuario', 'data']
+
+    def validate_texto(self, value):
+        if not value or value.strip() == "":
+            raise serializers.ValidationError("O texto do comentário é obrigatório.")
+        return value
+
 class TaskDetailSerializer(serializers.ModelSerializer):
     status = serializers.CharField(read_only=True)
     subtarefas = SubtaskResumoSerializer(many=True, read_only=True)
+    anexos = AnexoSerializer(many=True, read_only=True)
+    comentarios = ComentarioTarefaSerializer(many=True, read_only=True)
 
     class Meta:
         model = Tarefa
-        fields = ['id', 'nome', 'descricao', 'dataFim', 'projeto', 'status', 'subtarefas']
+        fields = ['id', 'nome', 'descricao', 'dataFim', 'projeto', 'status', 'subtarefas', 'anexos', 'comentarios']
 

@@ -53,9 +53,36 @@ export const getTaskDetails = async (taskId) => {
   return response.data;
 };
 
+// Requisição PATCH para atualizar o status de uma tarefa
+export const updateTaskStatus = async (taskId, status) => {
+  const response = await api.patch(`tasks/${taskId}/`, { status });
+  return response.data;
+};
+
 // Requisição POST para criar uma nova subtarefa (UC28)
 export const createSubtask = async (subtaskData) => {
   const response = await api.post('subtasks/', subtaskData);
+  return response.data;
+};
+
+// Requisição PATCH para atualizar o status de uma subtarefa
+export const updateSubtaskStatus = async (subtaskId, status) => {
+  const response = await api.patch(`subtasks/${subtaskId}/`, { status });
+  return response.data;
+};
+
+// Requisição POST para criar um comentário na tarefa (UC24)
+export const createTaskComment = async (commentData) => {
+  const response = await api.post('comments/', commentData);
+  return response.data;
+};
+
+export const uploadTaskAttachment = async (formData) => {
+  const response = await api.post('attachments/', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
   return response.data;
 };
 
