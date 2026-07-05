@@ -8,12 +8,23 @@ const api = axios.create({
 // Interceptor para injetar o Token JWT automaticamente em cada requisição
 api.interceptors.request.use(
   (config) => {
-    // Busca o token salvo no localStorage do navegador
-    const token = localStorage.getItem('token');
-    
-    if (token) {
-      // Configura o cabeçalho Authorization exigido pela API
-      config.headers.Authorization = `Bearer ${token}`;
+    // Lista de endpoints públicos que não devem enviar o Token de Authorization
+    const publicUrls = [
+      'users/login/',
+      'users/registro/',
+      'users/recuperar-senha/solicitar/',
+      'users/recuperar-senha/confirmar/'
+    ];
+    const isPublic = publicUrls.some(url => config.url && config.url.endsWith(url));
+
+    if (!isPublic) {
+      // Busca o token salvo no localStorage do navegador
+      const token = localStorage.getItem('token');
+      
+      if (token) {
+        // Configura o cabeçalho Authorization exigido pela API
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     
     return config;
@@ -95,5 +106,15 @@ export const register = async (credentials) => {
   const response = await api.post('users/registro/', credentials);
   return response.data;
 };
+
+export const solicitarCodigoRecuperacao = async (email) => {
+  const response = await api.post('users/recuperar-senha/solicitar/', { email });                                                                                 
+  return response.data;                                                                                                                                           
+};                                                                                                                                                                
+                                                                                                                                                                      
+export const reconfirmarSenha = async (dados) => {
+  const response = await api.post('users/recuperar-senha/confirmar/', dados);                                                                                     
+  return response.data;                                                                                                                                           
+};     
 
 export default api;
