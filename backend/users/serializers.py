@@ -37,3 +37,38 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['email'] = user.email
         token['tipo'] = user.tipo
         return token
+    
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'nome', 'email', 'cargoProfissional', 'tipo']
+        read_only_fields = ['id', 'email', 'tipo']
+
+class ChangePasswordSerializer(serializers.Serializer):
+    senha_atual = serializers.CharField(write_only=True)
+    nova_senha = serializers.CharField(write_only=True, min_length=8)
+    confirmar_senha = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        if data['nova_senha'] != data['confirmar_senha']:
+            raise serializers.ValidationError({'confirmar_senha': 'As senhas não conferem.'})
+        return data
+
+class UserListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'nome', 'email', 'cargoProfissional', 'tipo']
+
+class UserTipoUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['tipo']
+
+    def validate_tipo(self, novo_tipo):
+        solicitante = self.context['request'].user
+        if novo_tipo not in [User.COMUM, User.GESTOR, User.ADMINISTRADOR]:
+            raise serializers.ValidationError('Tipo de usuário inválido.')
+        # Regra de hierarquia: Gestor não pode promover para Administrador
+        if solicitante.tipo == User.GESTOR and novo_tipo == User.ADMINISTRADOR:
+            raise serializers.ValidationError('Gestores não podem promover usuários para Administrador.')
+        return novo_tipo
