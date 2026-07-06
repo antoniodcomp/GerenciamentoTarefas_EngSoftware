@@ -3,12 +3,21 @@ from django.core.mail import send_mail
 from django.conf import settings                                                                                                                                  
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated
+from .serializers import (
+    UserRegistrationSerializer, CustomTokenObtainPairSerializer,
+    UserProfileSerializer, ChangePasswordSerializer,
+    UserListSerializer, UserTipoUpdateSerializer
+)
 from rest_framework.views import APIView                                                                                                                          
 from rest_framework.response import Response                                                                                                                      
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework import status                                                                                                                                 
-from .serializers import CustomTokenObtainPairSerializer
-from .serializers import UserRegistrationSerializer
+from .serializers import (
+    UserRegistrationSerializer, CustomTokenObtainPairSerializer,
+    UserProfileSerializer, ChangePasswordSerializer,
+    UserListSerializer, UserTipoUpdateSerializer
+)
 from .models import Usuario, CodigoRecuperacao
 
 def hello_backend(request):
@@ -91,3 +100,52 @@ class PasswordResetConfirmView(APIView):
         codigo_obj.save()                                                                                                                                         
                                                                                                                                                                     
         return Response({"message": "Senha redefinida com sucesso!"}, status=status.HTTP_200_OK) 
+    
+class UserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserProfileSerializer(request.user)
+        return Response(serializer.data)
+
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        user = request.user
+        if not user.check_password(serializer.validated_data['senha_atual']):
+            return Response({'error': 'Senha atual incorreta.'}, status=status.HTTP_400_BAD_REQUEST)
+        user.set_password(serializer.validated_data['nova_senha'])
+        user.save()
+        return Response({'message': 'Senha alterada com sucesso!'})
+
+class UserListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.tipo not in [Usuario.GESTOR, Usuario.ADMINISTRADOR]:
+            return Response({'error': 'Acesso negado.'}, status=status.HTTP_403_FORBIDDEN)
+        usuarios = Usuario.objects.all().order_by('nome')
+        serializer = UserListSerializer(usuarios, many=True)
+        return Response(serializer.data)
+
+class UserTipoUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, pk):
+        if request.user.tipo not in [Usuario.GESTOR, Usuario.ADMINISTRADOR]:
+            return Response({'error': 'Acesso negado.'}, status=status.HTTP_403_FORBIDDEN)
+        if request.user.pk == pk:
+            return Response({'error': 'Você não pode alterar seu próprio tipo.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            usuario_alvo = Usuario.objects.get(pk=pk)
+        except Usuario.DoesNotExist:
+            return Response({'error': 'Usuário não encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = UserTipoUpdateSerializer(usuario_alvo, data=request.data, partial=True, context={'request': request})
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
+        return Response({'message': 'Tipo de usuário atualizado com sucesso!'})
