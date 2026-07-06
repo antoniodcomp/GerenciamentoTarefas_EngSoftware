@@ -36,6 +36,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['nome'] = user.nome
         token['email'] = user.email
         token['tipo'] = user.tipo
+        token['cargoProfissional'] = user.cargoProfissional
         return token
     
 class UserProfileSerializer(serializers.ModelSerializer):
