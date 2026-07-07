@@ -102,6 +102,13 @@ class UserProfileView(APIView):
     def get(self, request):
         serializer = UserProfileSerializer(request.user)
         return Response(serializer.data)
+    
+    def patch(self, request):
+        serializer = UserProfileSerializer(request.user, data=request.data, partial=True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
+        return Response(serializer.data)
 
 class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
@@ -135,6 +142,12 @@ class UserTipoUpdateView(APIView):
             return Response({'error': 'Acesso negado.'}, status=status.HTTP_403_FORBIDDEN)
         if request.user.pk == pk:
             return Response({'error': 'Você não pode alterar seu próprio tipo.'}, status=status.HTTP_400_BAD_REQUEST)
+        # Gestor não pode alterar o tipo de um Administrador
+        if request.user.tipo == Usuario.GESTOR and usuario_alvo.tipo == Usuario.ADMINISTRADOR:
+            return Response(
+                {'error': 'Gestores não podem alterar o tipo de Administradores.'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
         try:
             usuario_alvo = Usuario.objects.get(pk=pk)
         except Usuario.DoesNotExist:
