@@ -115,6 +115,26 @@ export const solicitarCodigoRecuperacao = async (email) => {
 export const reconfirmarSenha = async (dados) => {
   const response = await api.post('users/recuperar-senha/confirmar/', dados);                                                                                     
   return response.data;                                                                                                                                           
-};     
+};  
+
+export const getPerfil = async () => {
+  const response = await api.get('users/perfil/');
+  return response.data;
+};
+
+export const alterarSenha = async (dados) => {
+  const response = await api.post('users/perfil/alterar-senha/', dados);
+  return response.data;
+};
+
+export const getUsuarios = async () => {
+  const response = await api.get('users/lista/');
+  return response.data;
+};
+
+export const atualizarTipoUsuario = async (userId, tipo) => {
+  const response = await api.patch(`users/${userId}/tipo/`, { tipo });
+  return response.data;
+};
 
 export default api;
