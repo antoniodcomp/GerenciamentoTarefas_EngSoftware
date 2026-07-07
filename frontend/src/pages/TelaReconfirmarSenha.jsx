@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { reconfirmarSenha } from '../services/authService';
+import { reconfirmarSenha } from '../services/api';
 
 function TelaReconfirmarSenha() {
   const location = useLocation();

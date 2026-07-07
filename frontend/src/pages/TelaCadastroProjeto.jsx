@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createProject } from '../services/projectService';
+import { createProject } from '../services/api';
 
 function TelaCadastroProjeto() {
   const [name, setName] = useState('');

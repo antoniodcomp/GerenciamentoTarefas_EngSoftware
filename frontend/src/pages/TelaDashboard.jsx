@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getProjectDashboard, createProjectTarefa, updateTaskStatus } from '../services/projectService';
+import { getProjectDashboard, createProjectTarefa, updateTaskStatus } from '../services/api';
 
 function TelaDashboard() {
   const { id } = useParams();
