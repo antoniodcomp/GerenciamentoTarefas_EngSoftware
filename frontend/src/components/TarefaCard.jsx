@@ -1,25 +1,19 @@
 import React from 'react';
-import { Tarefa, Status } from '../types';
-
-interface TarefaCardProps {
-  tarefa: Tarefa;
-}
+import { Status } from '../constants';
 
 /**
  * Componente Puro (Presentational).
- * Não possui estado, não faz requisições. Apenas recebe as props e desenha a UI.
- * Facilita a manutenção, testes (mocks) e desacopla a UI da lógica de dados.
+ * Apenas desenha a UI baseada nos dados recebidos, sem regras de negócio ou rede.
  */
-export const TarefaCard: React.FC<TarefaCardProps> = ({ tarefa }) => {
-  // Função auxiliar para determinar a cor com base no status do Enum
-  const getBadgeStyle = (status: Status) => {
+export const TarefaCard = ({ tarefa }) => {
+  const getBadgeStyle = (status) => {
     switch (status) {
       case Status.CONCLUIDA:
         return { backgroundColor: '#d1fae5', color: '#065f46' }; // Verde
       case Status.EM_ANDAMENTO:
         return { backgroundColor: '#fef3c7', color: '#92400e' }; // Amarelo
       default:
-        return { backgroundColor: '#dbeafe', color: '#1e40af' }; // Azul (Pendente)
+        return { backgroundColor: '#dbeafe', color: '#1e40af' }; // Azul
     }
   };
 
