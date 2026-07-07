@@ -3,17 +3,17 @@ from django.conf import settings
 
 class Projeto(models.Model):
     nome = models.CharField(max_length=255)
-    descricao = models.TextField(blank=True, null=True)  # Nossa task
-    dataInicio = models.DateTimeField(blank=True, null=True)
-    dataFim = models.DateTimeField(blank=True, null=True)
-    dono = models.ForeignKey(  # Nossa task
+    descricao = models.TextField(blank=True, null=True) 
+    data_inicio = models.DateTimeField(blank=True, null=True)
+    data_fim = models.DateTimeField(blank=True, null=True)
+    dono = models.ForeignKey(  
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='projetos_proprios',
         null=True,
         blank=True
     )
-    criado_em = models.DateTimeField(auto_now_add=True, null=True, blank=True)  # Nossa task
+    criado_em = models.DateTimeField(auto_now_add=True, null=True, blank=True) 
     participantes = models.ManyToManyField(
         settings.AUTH_USER_MODEL, 
         related_name='projetos_participando'
@@ -38,8 +38,8 @@ class Tarefa(models.Model):
 
     nome = models.CharField(max_length=255)
     descricao = models.CharField(max_length=255, blank=True, null=True)
-    dataInicio = models.DateTimeField(blank=True, null=True)
-    dataFim = models.DateTimeField(blank=True, null=True)
+    data_inicio = models.DateTimeField(blank=True, null=True)
+    data_fim = models.DateTimeField(blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDENTE)
     projeto = models.ForeignKey(Projeto, on_delete=models.CASCADE, related_name='tarefas')
     participantes = models.ManyToManyField(
@@ -66,8 +66,8 @@ class Subtarefa(models.Model):
 
     nome = models.CharField(max_length=255)
     descricao = models.CharField(max_length=255, blank=True, null=True)
-    dataInicio = models.DateTimeField(blank=True, null=True)
-    dataFim = models.DateTimeField(blank=True, null=True)
+    data_inicio = models.DateTimeField(blank=True, null=True)
+    data_fim = models.DateTimeField(blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDENTE)
     tarefa = models.ForeignKey(Tarefa, on_delete=models.CASCADE, related_name='subtarefas')
     participantes = models.ManyToManyField(
@@ -83,9 +83,9 @@ class Subtarefa(models.Model):
 
 
 class Anexo(models.Model):
-    nomeArquivo = models.CharField(max_length=255, blank=True, null=True)
-    caminhoArquivo = models.FileField(upload_to='anexos/')
-    dataHoraUpload = models.DateTimeField(auto_now_add=True)
+    nome_arquivo = models.CharField(max_length=255, blank=True, null=True)
+    caminho_arquivo = models.FileField(upload_to='anexos/')
+    data_hora_upload = models.DateTimeField(auto_now_add=True)
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='anexos')
     tarefa = models.ForeignKey(Tarefa, on_delete=models.CASCADE, related_name='anexos')
 

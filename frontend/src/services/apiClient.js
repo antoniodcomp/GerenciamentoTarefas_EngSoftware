@@ -11,9 +11,9 @@ apiClient.interceptors.request.use(
     // Lista de endpoints públicos que não devem enviar o Token de Authorization
     const publicUrls = [
       'users/login/',
-      'users/registro/',
-      'users/recuperar-senha/solicitar/',
-      'users/recuperar-senha/confirmar/'
+      'users/register/',
+      'users/password-reset/request/',
+      'users/password-reset/confirm/'
     ];
     
     const isPublic = publicUrls.some(url => config.url && config.url.endsWith(url));

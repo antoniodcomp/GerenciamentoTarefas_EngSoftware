@@ -5,11 +5,13 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 User = get_user_model()
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='nome')
+    professional_role = serializers.CharField(source='cargo_profissional')
     password = serializers.CharField(write_only=True, min_length=8)
 
     class Meta:
         model = User
-        fields = ['nome', 'email', 'cargoProfissional', 'password']
+        fields = ['name', 'email', 'professional_role', 'password']
 
     def create(self, validated_data):
         # RF04/RF05: primeiro usuário vira ADMINISTRADOR, demais viram COMUM
@@ -20,10 +22,10 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             username=validated_data['email'],
             email=validated_data['email'],
             nome=validated_data['nome'],
-            cargoProfissional=validated_data['cargoProfissional'],
+            cargo_profissional=validated_data['cargo_profissional'],
             tipo=tipo,
         )
-        # RNF 3.2.3: senha criptografada, nunca salva em texto puro
+        
         user.set_password(validated_data['password'])
         user.save()
         return user
@@ -32,8 +34,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-        # Dados extras embutidos no token
-        token['nome'] = user.nome
+        
+        token['name'] = user.nome
         token['email'] = user.email
-        token['tipo'] = user.tipo
+        token['role'] = user.tipo
         return token
