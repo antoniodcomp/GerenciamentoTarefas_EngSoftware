@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getPerfil, alterarSenha, getUsuarios, atualizarTipoUsuario } from '../services/api';
+import { getPerfil, alterarSenha, getUsuarios, atualizarTipoUsuario, atualizarPerfil } from '../services/api';
 
 function TelaPerfilUsuario() {
   const navigate = useNavigate();
@@ -13,6 +13,8 @@ function TelaPerfilUsuario() {
   const [mensagem, setMensagem] = useState('');
   const [erro, setErro] = useState('');
   const [loadingUsuarios, setLoadingUsuarios] = useState(false);
+  const [nomeEdit, setNomeEdit] = useState('');
+  const [cargoEdit, setCargoEdit] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -31,6 +33,25 @@ function TelaPerfilUsuario() {
         .finally(() => setLoadingUsuarios(false));
     }
   }, [abaAtiva, usuario]);
+
+  useEffect(() => {
+    if (usuario) {
+      setNomeEdit(usuario.nome);
+      setCargoEdit(usuario.cargoProfissional);
+    }
+  }, [usuario]);
+
+  const handleSalvarPerfil = async () => {
+    setMensagem(''); setErro('');
+    if (!nomeEdit.trim()) { setErro('O nome não pode estar vazio.'); return; }
+    try {
+      const atualizado = await atualizarPerfil({ nome: nomeEdit, cargoProfissional: cargoEdit });
+      setUsuario(prev => ({ ...prev, nome: atualizado.nome, cargoProfissional: atualizado.cargoProfissional }));
+      setMensagem('Perfil atualizado com sucesso!');
+    } catch (e) {
+      setErro(e.response?.data?.error || 'Erro ao atualizar perfil.');
+      }
+  };
 
   const handleAlterarSenha = async () => {
     setMensagem(''); setErro('');
@@ -127,32 +148,45 @@ function TelaPerfilUsuario() {
       {erro && <div style={styles.errorMsg}>{erro}</div>}
 
       {abaAtiva === 'informacoes' && (
-        <div style={styles.card}>
-          <h3 style={styles.cardTitle}>Informações Pessoais</h3>
-          <p style={styles.cardSubtitle}>Suas informações de perfil cadastradas no sistema</p>
-          <div style={styles.fieldGroup}>
-            <label style={styles.label}>Nome Completo</label>
-            <div style={styles.fieldBox}>
-              <span style={styles.fieldIcon}>👤</span>
-              <span style={styles.fieldValue}>{usuario.nome}</span>
-            </div>
-          </div>
-          <div style={styles.fieldGroup}>
-            <label style={styles.label}>E-mail</label>
-            <div style={styles.fieldBox}>
-              <span style={styles.fieldIcon}>✉️</span>
-              <span style={styles.fieldValue}>{usuario.email}</span>
-            </div>
-          </div>
-          <div style={styles.fieldGroup}>
-            <label style={styles.label}>Cargo Profissional</label>
-            <div style={styles.fieldBox}>
-              <span style={styles.fieldIcon}>💼</span>
-              <span style={styles.fieldValue}>{usuario.cargoProfissional || 'Não informado'}</span>
-            </div>
-          </div>
-        </div>
-      )}
+  <div style={styles.card}>
+    <h3 style={styles.cardTitle}>Informações Pessoais</h3>
+    <p style={styles.cardSubtitle}>Atualize suas informações de perfil</p>
+    <div style={styles.fieldGroup}>
+      <label style={styles.label}>Nome Completo</label>
+      <div style={styles.fieldBox}>
+        <span style={styles.fieldIcon}>👤</span>
+        <input
+          type="text"
+          style={styles.inputField}
+          value={nomeEdit}
+          onChange={e => setNomeEdit(e.target.value)}
+        />
+      </div>
+    </div>
+    <div style={styles.fieldGroup}>
+      <label style={styles.label}>E-mail</label>
+      <div style={styles.fieldBox}>
+        <span style={styles.fieldIcon}>✉️</span>
+        <span style={styles.fieldValue}>{usuario.email}</span>
+      </div>
+    </div>
+    <div style={styles.fieldGroup}>
+      <label style={styles.label}>Cargo Profissional</label>
+      <div style={styles.fieldBox}>
+        <span style={styles.fieldIcon}>💼</span>
+        <input
+          type="text"
+          style={styles.inputField}
+          value={cargoEdit}
+          onChange={e => setCargoEdit(e.target.value)}
+        />
+      </div>
+    </div>
+    <div style={styles.buttonRow}>
+      <button style={styles.saveButton} onClick={handleSalvarPerfil}>Salvar Alterações</button>
+    </div>
+  </div>
+)}
 
       {abaAtiva === 'seguranca' && (
         <div style={styles.card}>
@@ -216,7 +250,7 @@ function TelaPerfilUsuario() {
                     <td style={styles.td}>{u.email}</td>
                     <td style={styles.td}>{u.cargoProfissional}</td>
                     <td style={styles.td}>
-                      <span style={{ ...styles.tipoBadge, ...getTipoBadgeStyle(u.tipo) }}>
+                      <span style={{ ...styles.tipoBadge, backgroundColor: getTipoBadgeStyle(u.tipo).bg, color: getTipoBadgeStyle(u.tipo).color }}>
                         {getTipoLabel(u.tipo)}
                       </span>
                     </td>
