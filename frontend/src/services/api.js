@@ -137,4 +137,9 @@ export const atualizarTipoUsuario = async (userId, tipo) => {
   return response.data;
 };
 
+export const atualizarPerfil = async (dados) => {
+  const response = await api.patch('users/perfil/', dados);
+  return response.data;
+};
+
 export default api;
