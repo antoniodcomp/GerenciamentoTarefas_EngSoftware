@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getProjects } from '../services/api';
+import { getProjects } from '../services/projectService'; // Corrigido para importar de projectService.js
 
 function TelaProjetos() {
   const [projects, setProjects] = useState([]);

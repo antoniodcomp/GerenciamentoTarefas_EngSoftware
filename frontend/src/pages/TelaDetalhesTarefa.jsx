@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getTaskDetails, createSubtask, uploadTaskAttachment, createTaskComment, updateTaskStatus, updateSubtaskStatus } from '../services/api';
+import { getTaskDetails, createSubtask, uploadTaskAttachment, createTaskComment, updateTaskStatus, updateSubtaskStatus } from '../services/taskService';
 
 function TelaDetalhesTarefa() {
   const { projectId, taskId } = useParams();
