@@ -27,8 +27,8 @@ function TelaCadastroUsuario() {
 
     try {
       const response = await register({ email: email, 
-                                        nome: nome, 
-                                        cargoProfissional: 'desenvolvedor',
+                                        name: nome, 
+                                        professional_role: 'desenvolvedor',
                                          password: senha });
       navigate('/login');    
       alert(`Usuário ${nome} cadastrado com sucesso!`);

@@ -11,9 +11,9 @@ api.interceptors.request.use(
     // Lista de endpoints públicos que não devem enviar o Token de Authorization
     const publicUrls = [
       'users/login/',
-      'users/registro/',
-      'users/recuperar-senha/solicitar/',
-      'users/recuperar-senha/confirmar/'
+      'users/register/',
+      'users/password-reset/request/',
+      'users/password-reset/confirm/'
     ];
     const isPublic = publicUrls.some(url => config.url && config.url.endsWith(url));
 
@@ -103,17 +103,17 @@ export const login = async (credentials) => {
 };
 
 export const register = async (credentials) => {
-  const response = await api.post('users/registro/', credentials);
+  const response = await api.post('users/register/', credentials);
   return response.data;
 };
 
 export const solicitarCodigoRecuperacao = async (email) => {
-  const response = await api.post('users/recuperar-senha/solicitar/', { email });                                                                                 
+  const response = await api.post('users/password-reset/request/', { email });                                                                                 
   return response.data;                                                                                                                                           
 };                                                                                                                                                                
                                                                                                                                                                       
 export const reconfirmarSenha = async (dados) => {
-  const response = await api.post('users/recuperar-senha/confirmar/', dados);                                                                                     
+  const response = await api.post('users/password-reset/confirm/', dados);                                                                                     
   return response.data;                                                                                                                                           
 };     
 

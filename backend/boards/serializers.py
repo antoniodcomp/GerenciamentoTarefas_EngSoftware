@@ -9,7 +9,7 @@ User = get_user_model()
 class ProjetoSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='nome')
     description = serializers.CharField(source='descricao', required=False, allow_blank=True, allow_null=True)
-    startline = serializers.DateTimeField(source='data_inicio')
+    startline = serializers.DateTimeField(source='data_inicio', required=False, allow_null=True)
     deadline = serializers.DateTimeField(source='data_fim')
     owner = serializers.PrimaryKeyRelatedField(source='dono', read_only=True)
     created_at = serializers.DateTimeField(source='criado_em', read_only=True)
@@ -37,7 +37,7 @@ class ProjetoSerializer(serializers.ModelSerializer):
 
 class TarefaResumoSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='nome', read_only=True)
-    status = serializers.CharField(source='status', read_only=True)
+    status = serializers.CharField(read_only=True)
     deadline = serializers.DateTimeField(source='data_fim', read_only=True)
     
     class Meta:
@@ -71,7 +71,7 @@ class TarefaUpdateSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='nome')
     description = serializers.CharField(source='descricao')
     deadline = serializers.DateTimeField(source='data_fim')
-    status = serializers.CharField(source='status')
+    status = serializers.CharField()
     
     class Meta:
         model = Tarefa
@@ -79,7 +79,7 @@ class TarefaUpdateSerializer(serializers.ModelSerializer):
 
 class SubtarefaResumoSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='nome', read_only=True)
-    status = serializers.CharField(source='status', read_only=True)
+    status = serializers.CharField(read_only=True)
     deadline = serializers.DateTimeField(source='data_fim', read_only=True)
 
     class Meta:
@@ -91,7 +91,7 @@ class SubtarefaCreateSerializer(serializers.ModelSerializer):
     description = serializers.CharField(source='descricao', required=False, allow_blank=True, allow_null=True)
     deadline = serializers.DateTimeField(source='data_fim')
     task = serializers.PrimaryKeyRelatedField(queryset=Tarefa.objects.all(), source='tarefa')
-    status = serializers.CharField(source='status', read_only=True)
+    status = serializers.CharField(read_only=True)
     
     class Meta:
         model = Subtarefa
@@ -111,7 +111,7 @@ class SubtarefaUpdateSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='nome')
     description = serializers.CharField(source='descricao')
     deadline = serializers.DateTimeField(source='data_fim')
-    status = serializers.CharField(source='status')
+    status = serializers.CharField()
 
     class Meta:
         model = Subtarefa
@@ -164,7 +164,7 @@ class TarefaDetailSerializer(serializers.ModelSerializer):
     deadline = serializers.DateTimeField(source='data_fim')
     project = serializers.PrimaryKeyRelatedField(queryset=Projeto.objects.all(), source='projeto')
     status = serializers.CharField(read_only=True)
-    subtasks = SubtaskResumoSerializer(source='subtarefas', many=True, read_only=True)
+    subtasks = SubtarefaResumoSerializer(source='subtarefas', many=True, read_only=True)
     files = AnexoSerializer(source='anexos', many=True, read_only=True)
     comments = ComentarioTarefaSerializer(source='comentarios', many=True, read_only=True)
 

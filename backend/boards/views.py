@@ -4,12 +4,12 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from .models import Projeto, Tarefa, Subtarefa, Anexo, ComentarioTarefa
-from .serializers import ProjetoSerializer, ProjectDashboardSerializer, TarefaCreateSerializer, SubtarefaCreateSerializer, TarefaDetailSerializer, AnexoSerializer, ComentarioTarefaSerializer, TarefaUpdateSerializer, SubtarefaUpdateSerializer
+from .serializers import ProjetoSerializer, ProjetoDashboardSerializer, TarefaCreateSerializer, SubtarefaCreateSerializer, TarefaDetailSerializer, AnexoSerializer, ComentarioTarefaSerializer, TarefaUpdateSerializer, SubtarefaUpdateSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.exceptions import PermissionDenied
 from django.db.models import Q
 
-class ProjectViewSet(viewsets.ModelViewSet):
+class ProjetoViewSet(viewsets.ModelViewSet):
     # queryset = Projeto.objects.all().order_by('-criado_em')
     serializer_class = ProjetoSerializer
     permission_classes = [IsAuthenticated]
@@ -60,12 +60,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
         projeto.delayed_tasks = delayed_tasks
         
         # Serializa com o serializer de dashboard
-        serializer = ProjectDashboardSerializer(projeto)
+        serializer = ProjetoDashboardSerializer(projeto)
         
         # O UC10 indica que o painel de indicadores é retornado ao visualizar o projeto em detalhes.
         return Response(serializer.data)
 
-class TaskViewSet(viewsets.ModelViewSet):
+class TarefaViewSet(viewsets.ModelViewSet):
     serializer_class = TarefaCreateSerializer
     permission_classes = [IsAuthenticated]
 
@@ -111,7 +111,7 @@ class TaskViewSet(viewsets.ModelViewSet):
             return TarefaUpdateSerializer
         return TarefaCreateSerializer
 
-class SubtaskViewSet(viewsets.ModelViewSet):
+class SubtarefaViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
