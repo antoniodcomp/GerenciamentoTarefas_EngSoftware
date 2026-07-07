@@ -4,14 +4,14 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from .models import Projeto, Tarefa, Subtarefa, Anexo, ComentarioTarefa
-from .serializers import ProjectSerializer, ProjectDashboardSerializer, TaskCreateSerializer, SubtaskCreateSerializer, TaskDetailSerializer, AnexoSerializer, ComentarioTarefaSerializer, TaskUpdateSerializer, SubtaskUpdateSerializer
+from .serializers import ProjetoSerializer, ProjetoDashboardSerializer, TarefaCreateSerializer, SubtarefaCreateSerializer, TarefaDetailSerializer, AnexoSerializer, ComentarioTarefaSerializer, TarefaUpdateSerializer, SubtarefaUpdateSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.exceptions import PermissionDenied
 from django.db.models import Q
 
-class ProjectViewSet(viewsets.ModelViewSet):
+class ProjetoViewSet(viewsets.ModelViewSet):
     # queryset = Projeto.objects.all().order_by('-criado_em')
-    serializer_class = ProjectSerializer
+    serializer_class = ProjetoSerializer
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
@@ -49,7 +49,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         
         # Tarefas Atrasadas (RF59) - Não estão concluídas e o prazo já passou
         now = timezone.now()
-        delayed_tasks = tarefas.exclude(status=Tarefa.CONCLUIDA).filter(dataFim__lt=now)
+        delayed_tasks = tarefas.exclude(status=Tarefa.CONCLUIDA).filter(data_fim__lt=now)
         
         # Anexando as métricas no objeto do projeto (em memória, sem salvar no banco)
         projeto.total_tasks = total_tasks
@@ -60,39 +60,13 @@ class ProjectViewSet(viewsets.ModelViewSet):
         projeto.delayed_tasks = delayed_tasks
         
         # Serializa com o serializer de dashboard
-        serializer = ProjectDashboardSerializer(projeto)
+        serializer = ProjetoDashboardSerializer(projeto)
         
         # O UC10 indica que o painel de indicadores é retornado ao visualizar o projeto em detalhes.
         return Response(serializer.data)
-    
-    # def get_queryset(self):
-    #     user = self.request.user
-  
-    #     # LOGS DE DIAGNÓSTICO
-    #     print("\n" + "="*50)
-    #     print(f"[DEBUG API] Usuário que fez a requisição: {user}")
-    #     print(f"[DEBUG API] Está autenticado? {user.is_authenticated}")
-    #     if user.is_authenticated:
-    #         print(f"[DEBUG API] ID do Usuário: {user.id} | E-mail: {user.email}")
-  
-    #     # Lista todos os projetos no banco para ver quem é o dono e quem são os participantes salvos
-    #     todos_projetos = Projeto.objects.all()
-    #     print(f"[DEBUG API] Total de projetos no banco: {todos_projetos.count()}")
-    #     for p in todos_projetos:
-    #         participantes_ids = list(p.participantes.values_list('id', flat=True))
-    #         print(f" -> Projeto ID: {p.id} | Nome: {p.nome} | Dono ID: {p.dono_id} | Participantes IDs: {participantes_ids}")
-    #     print("="*50 + "\n")
-  
-    #     if not user.is_authenticated:
-    #         return Projeto.objects.none()
-  
-    #     return Projeto.objects.filter(
-    #         Q(dono=user) | Q(participantes=user)
-    #     ).distinct().order_by('-criado_em')
 
-
-class TaskViewSet(viewsets.ModelViewSet):
-    serializer_class = TaskCreateSerializer
+class TarefaViewSet(viewsets.ModelViewSet):
+    serializer_class = TarefaCreateSerializer
     permission_classes = [IsAuthenticated]
 
         # Restringe a busca apenas para tarefas dos projetos do usuário
@@ -103,8 +77,7 @@ class TaskViewSet(viewsets.ModelViewSet):
             ).distinct()
 
     def perform_create(self, serializer):
-        projeto_id = self.request.data.get('projeto')
-        projeto = Projeto.objects.get(id=projeto_id)
+        projeto = serializer.validated_data.get('projeto')
 
             # 1. RF15 (Permissão de Cadastro): Valida se quem está criando é dono ou gestor
         if projeto.dono != self.request.user and self.request.user not in projeto.participantes.all():
@@ -133,18 +106,18 @@ class TaskViewSet(viewsets.ModelViewSet):
                     """
     def get_serializer_class(self):
         if self.action == 'retrieve':
-            return TaskDetailSerializer
+            return TarefaDetailSerializer
         if self.action in ['update', 'partial_update']:
-            return TaskUpdateSerializer
-        return TaskCreateSerializer
+            return TarefaUpdateSerializer
+        return TarefaCreateSerializer
 
-class SubtaskViewSet(viewsets.ModelViewSet):
+class SubtarefaViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
         if self.action in ['update', 'partial_update']:
-            return SubtaskUpdateSerializer
-        return SubtaskCreateSerializer
+            return SubtarefaUpdateSerializer
+        return SubtarefaCreateSerializer
 
     def get_queryset(self):
         user = self.request.user

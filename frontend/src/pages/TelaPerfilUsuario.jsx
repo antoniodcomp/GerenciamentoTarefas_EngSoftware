@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getPerfil, alterarSenha, getUsuarios, atualizarTipoUsuario, atualizarPerfil } from '../services/api';
+import { getPerfil, alterarSenha, getUsuarios, atualizarTipoUsuario, atualizarPerfil } from '../services/authService';
 
 function TelaPerfilUsuario() {
   const navigate = useNavigate();
@@ -36,8 +36,8 @@ function TelaPerfilUsuario() {
 
   useEffect(() => {
     if (usuario) {
-      setNomeEdit(usuario.nome);
-      setCargoEdit(usuario.cargoProfissional);
+      setNomeEdit(usuario.name);
+      setCargoEdit(usuario.professional_role);
     }
   }, [usuario]);
 
@@ -45,8 +45,8 @@ function TelaPerfilUsuario() {
     setMensagem(''); setErro('');
     if (!nomeEdit.trim()) { setErro('O nome não pode estar vazio.'); return; }
     try {
-      const atualizado = await atualizarPerfil({ nome: nomeEdit, cargoProfissional: cargoEdit });
-      setUsuario(prev => ({ ...prev, nome: atualizado.nome, cargoProfissional: atualizado.cargoProfissional }));
+      const atualizado = await atualizarPerfil({ name: nomeEdit, professional_role: cargoEdit });
+      setUsuario(prev => ({ ...prev, name: atualizado.name, professional_role: atualizado.professional_role }));
       setMensagem('Perfil atualizado com sucesso!');
     } catch (e) {
       setErro(e.response?.data?.error || 'Erro ao atualizar perfil.');
@@ -62,7 +62,7 @@ function TelaPerfilUsuario() {
       setErro('As senhas não conferem.'); return;
     }
     try {
-      await alterarSenha({ senha_atual: senhaAtual, nova_senha: novaSenha, confirmar_senha: confirmarSenha });
+      await alterarSenha({ current_password: senhaAtual, new_password: novaSenha, confirm_password: confirmarSenha });
       setMensagem('Senha alterada com sucesso!');
       setSenhaAtual(''); setNovaSenha(''); setConfirmarSenha('');
     } catch (e) {
@@ -74,7 +74,7 @@ function TelaPerfilUsuario() {
     setMensagem(''); setErro('');
     try {
       await atualizarTipoUsuario(userId, novoTipo);
-      setUsuarios(prev => prev.map(u => u.id === userId ? { ...u, tipo: novoTipo } : u));
+      setUsuarios(prev => prev.map(u => u.id === userId ? { ...u, role: novoTipo } : u));
       setMensagem('Tipo de usuário atualizado com sucesso!');
     } catch (e) {
       setErro(e.response?.data?.error || 'Erro ao atualizar tipo.');
@@ -99,15 +99,15 @@ function TelaPerfilUsuario() {
 
   // Opções de tipo disponíveis conforme hierarquia
   const getTiposDisponiveis = () => {
-    if (usuario?.tipo === 'ADMINISTRADOR') return ['COMUM', 'GESTOR', 'ADMINISTRADOR'];
-    if (usuario?.tipo === 'GESTOR') return ['COMUM', 'GESTOR'];
+    if (usuario?.role === 'ADMINISTRADOR') return ['COMUM', 'GESTOR', 'ADMINISTRADOR'];
+    if (usuario?.role === 'GESTOR') return ['COMUM', 'GESTOR'];
     return [];
   };
 
   if (!usuario) return null;
 
-  const podeGerenciarUsuarios = usuario.tipo === 'ADMINISTRADOR' || usuario.tipo === 'GESTOR';
-  const badgeStyle = getTipoBadgeStyle(usuario.tipo);
+  const podeGerenciarUsuarios = usuario.role === 'ADMINISTRADOR' || usuario.role === 'GESTOR';
+  const badgeStyle = getTipoBadgeStyle(usuario.role);
 
   return (
     <div style={styles.container}>
@@ -116,13 +116,13 @@ function TelaPerfilUsuario() {
 
       <div style={styles.card}>
         <div style={styles.profileHeader}>
-          <div style={styles.avatar}>{getIniciais(usuario.nome)}</div>
+          <div style={styles.avatar}>{getIniciais(usuario.name)}</div>
           <div>
-            <h2 style={styles.profileName}>{usuario.nome}</h2>
-            <p style={styles.profileCargo}>{usuario.cargoProfissional}</p>
+            <h2 style={styles.profileName}>{usuario.name}</h2>
+            <p style={styles.profileCargo}>{usuario.professional_role}</p>
             <div style={styles.profileBadgeRow}>
               <span style={{ ...styles.tipoBadge, backgroundColor: badgeStyle.bg, color: badgeStyle.color }}>
-                {getTipoLabel(usuario.tipo)}
+                {getTipoLabel(usuario.role)}
               </span>
               <span style={styles.profileEmail}>{usuario.email}</span>
             </div>
@@ -224,7 +224,7 @@ function TelaPerfilUsuario() {
         <div style={styles.card}>
           <h3 style={styles.cardTitle}>Gerenciar Usuários</h3>
           <p style={styles.cardSubtitle}>
-            {usuario.tipo === 'ADMINISTRADOR'
+            {usuario.role === 'ADMINISTRADOR'
               ? 'Como Administrador, você pode definir qualquer tipo de acesso.'
               : 'Como Gestor, você pode promover usuários até Gestor.'}
           </p>
@@ -246,18 +246,18 @@ function TelaPerfilUsuario() {
               <tbody>
                 {usuarios.map(u => (
                   <tr key={u.id}>
-                    <td style={styles.td}>{u.nome}</td>
+                    <td style={styles.td}>{u.name}</td>
                     <td style={styles.td}>{u.email}</td>
-                    <td style={styles.td}>{u.cargoProfissional}</td>
+                    <td style={styles.td}>{u.professional_role}</td>
                     <td style={styles.td}>
-                      <span style={{ ...styles.tipoBadge, backgroundColor: getTipoBadgeStyle(u.tipo).bg, color: getTipoBadgeStyle(u.tipo).color }}>
-                        {getTipoLabel(u.tipo)}
+                      <span style={{ ...styles.tipoBadge, backgroundColor: getTipoBadgeStyle(u.role).bg, color: getTipoBadgeStyle(u.role).color }}>
+                        {getTipoLabel(u.role)}
                       </span>
                     </td>
                     <td style={styles.td}>
                       {u.id !== usuario.id ? (
                         <select
-                          value={u.tipo}
+                          value={u.role}
                           onChange={e => handleAtualizarTipo(u.id, e.target.value)}
                           style={styles.select}
                         >

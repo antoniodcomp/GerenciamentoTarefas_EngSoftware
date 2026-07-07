@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getProjectDashboard, createProjectTarefa, updateTaskStatus } from '../services/api';
+import { getProjectDashboard } from '../services/projectService';
+import { createProjectTarefa, updateTaskStatus } from '../services/taskService';
 
 function TelaDashboard() {
   const { id } = useParams();
@@ -43,10 +44,10 @@ function TelaDashboard() {
       setTaskLoading(true);
       setTaskError('');
       await createProjectTarefa({
-        nome: taskName.trim(),
-        descricao: taskDesc.trim(),
-        dataFim: taskDeadline,
-        projeto: id
+        name: taskName.trim(),
+        description: taskDesc.trim(),
+        deadline: taskDeadline,
+        project: id
       });
       // Recarregar os dados do dashboard após o cadastro
       const res = await getProjectDashboard(id);
@@ -179,7 +180,7 @@ function TelaDashboard() {
                 title="Clique para ver os detalhes da tarefa"
               >
                 <div>
-                  <strong>{task.nome}</strong>
+                  <strong>{task.name}</strong>
                   <select 
                     value={task.status} 
                     onChange={(e) => handleTaskStatusChange(task.id, e.target.value, e)}
@@ -192,7 +193,7 @@ function TelaDashboard() {
                   </select>
                 </div>
                 <div style={{ color: '#ef4444' }}>
-                  Prazo: {formatDate(task.dataFim)}
+                  Prazo: {formatDate(task.deadline)}
                 </div>
               </div>
             ))}
@@ -217,7 +218,7 @@ function TelaDashboard() {
                 title="Clique para ver os detalhes da tarefa"
               >
                 <div>
-                  <strong>{task.nome}</strong>
+                  <strong>{task.name}</strong>
                   <select 
                     value={task.status} 
                     onChange={(e) => handleTaskStatusChange(task.id, e.target.value, e)}
@@ -230,7 +231,7 @@ function TelaDashboard() {
                   </select>
                 </div>
                 <div style={{ color: 'var(--text)', fontSize: '14px' }}>
-                  Prazo: {formatDate(task.dataFim)}
+                  Prazo: {formatDate(task.deadline)}
                 </div>
               </div>
             ))}

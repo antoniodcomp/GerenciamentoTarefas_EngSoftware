@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { login, solicitarCodigoRecuperacao } from '../services/api';
+import { login, solicitarCodigoRecuperacao } from '../services/authService';
 
 function TelaLogin() {
   const [email, setEmail] = useState('');

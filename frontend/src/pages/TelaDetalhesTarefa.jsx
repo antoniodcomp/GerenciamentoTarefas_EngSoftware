@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getTaskDetails, createSubtask, uploadTaskAttachment, createTaskComment, updateTaskStatus, updateSubtaskStatus } from '../services/api';
+import { getTaskDetails, createSubtask, uploadTaskAttachment, createTaskComment, updateTaskStatus, updateSubtaskStatus } from '../services/taskService';
 
 function TelaDetalhesTarefa() {
   const { projectId, taskId } = useParams();
@@ -9,7 +9,7 @@ function TelaDetalhesTarefa() {
   const [loading, setLoading] = useState(true);
 
   const [showSubtaskForm, setShowSubtaskForm] = useState(false);
-  const [newSubtask, setNewSubtask] = useState({ nome: '', descricao: '', dataFim: '' });
+  const [newSubtask, setNewSubtask] = useState({ name: '', description: '', deadline: '' });
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -51,11 +51,13 @@ function TelaDetalhesTarefa() {
 
     try {
       await createSubtask({
-        ...newSubtask,
-        tarefa: taskId
+        name: newSubtask.name,
+        description: newSubtask.description,
+        deadline: newSubtask.deadline,
+        task: taskId
       });
       setShowSubtaskForm(false);
-      setNewSubtask({ nome: '', descricao: '', dataFim: '' });
+      setNewSubtask({ name: '', description: '', deadline: '' });
       fetchTaskAgain(); // Refresh task data to get new subtasks
     } catch (error) {
       console.error(error);
@@ -103,9 +105,9 @@ function TelaDetalhesTarefa() {
     setUploadError('');
 
     const formData = new FormData();
-    formData.append('caminhoArquivo', selectedFile);
-    formData.append('nomeArquivo', selectedFile.name);
-    formData.append('tarefa', taskId);
+    formData.append('file_path', selectedFile);
+    formData.append('file_name', selectedFile.name);
+    formData.append('task', taskId);
 
     try {
       await uploadTaskAttachment(formData);
@@ -138,8 +140,8 @@ function TelaDetalhesTarefa() {
 
     try {
       await createTaskComment({
-        texto: newComment,
-        tarefa: taskId
+        text: newComment,
+        task: taskId
       });
       setNewComment('');
       fetchTaskAgain();
@@ -215,7 +217,7 @@ function TelaDetalhesTarefa() {
       
       <div style={{ backgroundColor: 'var(--bg)', padding: '40px', borderRadius: '12px', border: '1px solid var(--border)', boxShadow: 'var(--shadow)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <h1 style={{ margin: '0 0 10px 0', color: 'var(--text-h)', fontSize: '32px' }}>{task.nome}</h1>
+          <h1 style={{ margin: '0 0 10px 0', color: 'var(--text-h)', fontSize: '32px' }}>{task.name}</h1>
           <select 
             value={task.status} 
             onChange={handleTaskStatusChange}
@@ -230,13 +232,13 @@ function TelaDetalhesTarefa() {
         <div style={{ marginTop: '40px' }}>
           <h3 style={{ color: 'var(--text-h)', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>Descrição da Tarefa</h3>
           <p style={{ color: 'var(--text)', lineHeight: '1.6', fontSize: '16px' }}>
-            {task.descricao || <i>Nenhuma descrição detalhada foi fornecida para esta tarefa.</i>}
+            {task.description || <i>Nenhuma descrição detalhada foi fornecida para esta tarefa.</i>}
           </p>
         </div>
         
         <div style={{ marginTop: '30px' }}>
           <h3 style={{ color: 'var(--text-h)', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>Prazos e Informações</h3>
-          <p style={{ color: 'var(--text)' }}><strong>Prazo Final:</strong> {formatDate(task.dataFim)}</p>
+          <p style={{ color: 'var(--text)' }}><strong>Prazo Final:</strong> {formatDate(task.deadline)}</p>
         </div>
 
         {/* --- Seção de Subtarefas --- */}
@@ -260,8 +262,8 @@ function TelaDetalhesTarefa() {
                   <label style={{ display: 'block', marginBottom: '5px', color: 'var(--text)' }}>Título</label>
                   <input 
                     type="text" 
-                    value={newSubtask.nome}
-                    onChange={(e) => setNewSubtask({...newSubtask, nome: e.target.value})}
+                    value={newSubtask.name}
+                    onChange={(e) => setNewSubtask({...newSubtask, name: e.target.value})}
                     style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--border)', backgroundColor: 'var(--bg)', color: 'var(--text)' }}
                     required
                   />
@@ -269,8 +271,8 @@ function TelaDetalhesTarefa() {
                 <div style={{ marginBottom: '15px' }}>
                   <label style={{ display: 'block', marginBottom: '5px', color: 'var(--text)' }}>Descrição</label>
                   <textarea 
-                    value={newSubtask.descricao}
-                    onChange={(e) => setNewSubtask({...newSubtask, descricao: e.target.value})}
+                    value={newSubtask.description}
+                    onChange={(e) => setNewSubtask({...newSubtask, description: e.target.value})}
                     style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--border)', backgroundColor: 'var(--bg)', color: 'var(--text)', minHeight: '60px' }}
                   />
                 </div>
@@ -278,8 +280,8 @@ function TelaDetalhesTarefa() {
                   <label style={{ display: 'block', marginBottom: '5px', color: 'var(--text)' }}>Prazo Final</label>
                   <input 
                     type="datetime-local" 
-                    value={newSubtask.dataFim}
-                    onChange={(e) => setNewSubtask({...newSubtask, dataFim: e.target.value})}
+                    value={newSubtask.deadline}
+                    onChange={(e) => setNewSubtask({...newSubtask, deadline: e.target.value})}
                     style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--border)', backgroundColor: 'var(--bg)', color: 'var(--text)' }}
                     required
                   />
@@ -296,13 +298,13 @@ function TelaDetalhesTarefa() {
           )}
 
           <div style={{ marginTop: '20px' }}>
-            {task.subtarefas && task.subtarefas.length > 0 ? (
+            {task.subtasks && task.subtasks.length > 0 ? (
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {task.subtarefas.map(subtask => (
+                {task.subtasks.map(subtask => (
                   <li key={subtask.id} style={{ padding: '15px', border: '1px solid var(--border)', borderRadius: '8px', marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                      <h4 style={{ margin: '0 0 5px 0', color: 'var(--text-h)' }}>{subtask.nome}</h4>
-                      <div style={{ fontSize: '14px', color: 'var(--text)' }}>Prazo: {formatDate(subtask.dataFim)}</div>
+                      <h4 style={{ margin: '0 0 5px 0', color: 'var(--text-h)' }}>{subtask.name}</h4>
+                      <div style={{ fontSize: '14px', color: 'var(--text)' }}>Prazo: {formatDate(subtask.deadline)}</div>
                     </div>
                     <select 
                       value={subtask.status} 
@@ -330,15 +332,15 @@ function TelaDetalhesTarefa() {
 
           {/* Lista de Anexos */}
           <div style={{ marginBottom: '20px' }}>
-            {task.anexos && task.anexos.length > 0 ? (
+            {task.files && task.files.length > 0 ? (
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {task.anexos.map(anexo => (
+                {task.files.map(anexo => (
                   <li key={anexo.id} style={{ padding: '10px 15px', border: '1px solid var(--border)', borderRadius: '8px', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                      <a href={`http://localhost:8000${anexo.caminhoArquivo}`} target="_blank" rel="noreferrer" style={{ color: '#3b82f6', textDecoration: 'none', fontWeight: 'bold' }}>
-                        {anexo.nomeArquivo}
+                      <a href={`http://localhost:8000${anexo.file_path}`} target="_blank" rel="noreferrer" style={{ color: '#3b82f6', textDecoration: 'none', fontWeight: 'bold' }}>
+                        {anexo.file_name}
                       </a>
-                      <div style={{ fontSize: '12px', color: 'var(--text)' }}>Enviado por: {anexo.usuario_nome || 'Usuário'}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--text)' }}>Enviado por: {anexo.user_name || 'Usuário'}</div>
                     </div>
                   </li>
                 ))}
@@ -379,18 +381,18 @@ function TelaDetalhesTarefa() {
 
           {/* Lista de Comentários */}
           <div style={{ marginBottom: '20px' }}>
-            {task.comentarios && task.comentarios.length > 0 ? (
+            {task.comments && task.comments.length > 0 ? (
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {task.comentarios.map(comentario => (
+                {task.comments.map(comentario => (
                   <li key={comentario.id} style={{ padding: '15px', border: '1px solid var(--border)', borderRadius: '8px', marginBottom: '10px', backgroundColor: 'var(--bg)' }}>
                     <div style={{ marginBottom: '8px', fontWeight: 'bold', color: 'var(--text-h)' }}>
-                      {comentario.usuario_nome || 'Usuário'}
+                      {comentario.user_name || 'Usuário'}
                       <span style={{ fontWeight: 'normal', fontSize: '12px', color: 'var(--text)', marginLeft: '10px' }}>
-                        {new Date(comentario.data).toLocaleString('pt-BR')}
+                        {new Date(comentario.date).toLocaleString('pt-BR')}
                       </span>
                     </div>
                     <div style={{ color: 'var(--text)', lineHeight: '1.5' }}>
-                      {comentario.texto}
+                      {comentario.text}
                     </div>
                   </li>
                 ))}

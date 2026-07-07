@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { register } from '../services/api';
+import { register } from '../services/authService';
 
 function TelaCadastroUsuario() {
   const [nome, setNome]   = useState('');
@@ -27,8 +27,8 @@ function TelaCadastroUsuario() {
 
     try {
       const response = await register({ email: email, 
-                                        nome: nome, 
-                                        cargoProfissional: 'desenvolvedor',
+                                        name: nome, 
+                                        professional_role: 'desenvolvedor',
                                          password: senha });
       navigate('/login');    
       alert(`Usuário ${nome} cadastrado com sucesso!`);

@@ -15,13 +15,11 @@ class Usuario(AbstractUser):
     ]
 
     
-    
-    
     nome = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
     
     
-    cargoProfissional = models.CharField(max_length=255)
+    cargo_profissional = models.CharField(max_length=255)
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default=COMUM)
 
     USERNAME_FIELD = 'email'

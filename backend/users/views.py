@@ -65,11 +65,11 @@ class PasswordResetConfirmView(APIView):
                                                                                                                                                                     
     def post(self, request):                                                                                                                                      
         email = request.data.get('email')                                                                                                                         
-        codigo = request.data.get('codigo')                                                                                                                       
-        nova_senha = request.data.get('nova_senha')                                                                                                               
+        code = request.data.get('code')                                                                                                                       
+        new_password = request.data.get('new_password')                                                                                                               
                                                                                                                                                                     
-        if not all([email, codigo, nova_senha]):                                                                                                                  
-            return Response({"error": "Todos os campos (e-mail, código e nova senha) são obrigatórios."}, status=status.HTTP_400_BAD_REQUEST)                     
+        if not all([email, code, new_password]):                                                                                                                  
+            return Response({"error": "Todos os campos (email, code e new_password) são obrigatórios."}, status=status.HTTP_400_BAD_REQUEST)                     
                                                                                                                                                                     
         try:                                                                                                                                                      
             usuario = Usuario.objects.get(email=email)                                                                                                            
@@ -78,7 +78,7 @@ class PasswordResetConfirmView(APIView):
                                                                                                                                                                     
         # Busca o código correspondente                                                                                                                           
         try:                                                                                                                                                      
-            codigo_obj = CodigoRecuperacao.objects.filter(usuario=usuario, codigo=codigo).latest('criado_em')                                                     
+            codigo_obj = CodigoRecuperacao.objects.filter(usuario=usuario, codigo=code).latest('criado_em')                                                     
         except CodigoRecuperacao.DoesNotExist:                                                                                                                    
             return Response({"error": "Código de verificação incorreto."}, status=status.HTTP_400_BAD_REQUEST)                                                    
                                                                                                                                                                     
@@ -87,7 +87,7 @@ class PasswordResetConfirmView(APIView):
             return Response({"error": "O código expirou ou já foi utilizado."}, status=status.HTTP_400_BAD_REQUEST)                                               
                                                                                                                                                                     
         # Altera a senha do usuário                                                                                                                               
-        usuario.set_password(nova_senha)                                                                                                                          
+        usuario.set_password(new_password)                                                                                                                          
         usuario.save()                                                                                                                                            
                                                                                                                                                                     
         # Invalida o código marcando como usado                                                                                                                   
@@ -118,9 +118,9 @@ class ChangePasswordView(APIView):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         user = request.user
-        if not user.check_password(serializer.validated_data['senha_atual']):
+        if not user.check_password(serializer.validated_data['current_password']):
             return Response({'error': 'Senha atual incorreta.'}, status=status.HTTP_400_BAD_REQUEST)
-        user.set_password(serializer.validated_data['nova_senha'])
+        user.set_password(serializer.validated_data['new_password'])
         user.save()
         return Response({'message': 'Senha alterada com sucesso!'})
 
@@ -142,16 +142,16 @@ class UserTipoUpdateView(APIView):
             return Response({'error': 'Acesso negado.'}, status=status.HTTP_403_FORBIDDEN)
         if request.user.pk == pk:
             return Response({'error': 'Você não pode alterar seu próprio tipo.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            usuario_alvo = Usuario.objects.get(pk=pk)
+        except Usuario.DoesNotExist:
+            return Response({'error': 'Usuário não encontrado.'}, status=status.HTTP_404_NOT_FOUND)
         # Gestor não pode alterar o tipo de um Administrador
         if request.user.tipo == Usuario.GESTOR and usuario_alvo.tipo == Usuario.ADMINISTRADOR:
             return Response(
                 {'error': 'Gestores não podem alterar o tipo de Administradores.'}, 
                 status=status.HTTP_403_FORBIDDEN
             )
-        try:
-            usuario_alvo = Usuario.objects.get(pk=pk)
-        except Usuario.DoesNotExist:
-            return Response({'error': 'Usuário não encontrado.'}, status=status.HTTP_404_NOT_FOUND)
         serializer = UserTipoUpdateSerializer(usuario_alvo, data=request.data, partial=True, context={'request': request})
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

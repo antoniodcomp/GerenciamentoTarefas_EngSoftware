@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { reconfirmarSenha } from '../services/api';
+import { reconfirmarSenha } from '../services/authService';
 
 function TelaReconfirmarSenha() {
   const location = useLocation();
@@ -31,8 +31,8 @@ function TelaReconfirmarSenha() {
     try {
       await reconfirmarSenha({
         email,
-        codigo,
-        nova_senha: novaSenha,
+        code: codigo,
+        new_password: novaSenha,
       });
       setSucesso('Senha redefinida com sucesso! Redirecionando...');
       setTimeout(() => {
