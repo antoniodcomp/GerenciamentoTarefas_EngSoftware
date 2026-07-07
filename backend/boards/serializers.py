@@ -86,16 +86,6 @@ class SubtarefaResumoSerializer(serializers.ModelSerializer):
         model = Subtarefa
         fields = ['id', 'name', 'status', 'deadline']
 
-class SubtarefaUpdateSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='nome')
-    description = serializers.CharField(source='descricao')
-    deadline = serializers.DateTimeField(source='data_fim')
-    status = serializers.CharField(source='status')
-
-    class Meta:
-        model = Subtarefa
-        fields = ['id', 'name', 'description', 'deadline', 'status']
-
 class SubtarefaCreateSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='nome')
     description = serializers.CharField(source='descricao', required=False, allow_blank=True, allow_null=True)
@@ -116,6 +106,16 @@ class SubtarefaCreateSerializer(serializers.ModelSerializer):
         if not value:
             raise serializers.ValidationError("O prazo final da subtarefa é obrigatório.")
         return value
+
+class SubtarefaUpdateSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='nome')
+    description = serializers.CharField(source='descricao')
+    deadline = serializers.DateTimeField(source='data_fim')
+    status = serializers.CharField(source='status')
+
+    class Meta:
+        model = Subtarefa
+        fields = ['id', 'name', 'description', 'deadline', 'status']
 
 class AnexoSerializer(serializers.ModelSerializer):
     file_name = serializers.CharField(source='nome_arquivo')

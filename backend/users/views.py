@@ -61,11 +61,11 @@ class PasswordResetConfirmView(APIView):
                                                                                                                                                                     
     def post(self, request):                                                                                                                                      
         email = request.data.get('email')                                                                                                                         
-        codigo = request.data.get('codigo')                                                                                                                       
-        nova_senha = request.data.get('nova_senha')                                                                                                               
+        code = request.data.get('code')                                                                                                                       
+        new_password = request.data.get('new_password')                                                                                                               
                                                                                                                                                                     
-        if not all([email, codigo, nova_senha]):                                                                                                                  
-            return Response({"error": "Todos os campos (e-mail, código e nova senha) são obrigatórios."}, status=status.HTTP_400_BAD_REQUEST)                     
+        if not all([email, code, new_password]):                                                                                                                  
+            return Response({"error": "Todos os campos (email, code e new_password) são obrigatórios."}, status=status.HTTP_400_BAD_REQUEST)                     
                                                                                                                                                                     
         try:                                                                                                                                                      
             usuario = Usuario.objects.get(email=email)                                                                                                            
@@ -74,7 +74,7 @@ class PasswordResetConfirmView(APIView):
                                                                                                                                                                     
         # Busca o código correspondente                                                                                                                           
         try:                                                                                                                                                      
-            codigo_obj = CodigoRecuperacao.objects.filter(usuario=usuario, codigo=codigo).latest('criado_em')                                                     
+            codigo_obj = CodigoRecuperacao.objects.filter(usuario=usuario, codigo=code).latest('criado_em')                                                     
         except CodigoRecuperacao.DoesNotExist:                                                                                                                    
             return Response({"error": "Código de verificação incorreto."}, status=status.HTTP_400_BAD_REQUEST)                                                    
                                                                                                                                                                     
@@ -83,7 +83,7 @@ class PasswordResetConfirmView(APIView):
             return Response({"error": "O código expirou ou já foi utilizado."}, status=status.HTTP_400_BAD_REQUEST)                                               
                                                                                                                                                                     
         # Altera a senha do usuário                                                                                                                               
-        usuario.set_password(nova_senha)                                                                                                                          
+        usuario.set_password(new_password)                                                                                                                          
         usuario.save()                                                                                                                                            
                                                                                                                                                                     
         # Invalida o código marcando como usado                                                                                                                   
