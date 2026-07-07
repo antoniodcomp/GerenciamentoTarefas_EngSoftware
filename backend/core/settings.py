@@ -3,11 +3,11 @@ from pathlib import Path
 from dotenv import load_dotenv
 from datetime import timedelta
 
-# Carrega as senhas do arquivo .env
-load_dotenv()
-
 # Caminho base do projeto
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Carrega as variáveis do arquivo .env
+load_dotenv(BASE_DIR / '.env')
 
 SECRET_KEY = 'django-insecure-chave-secreta-para-desenvolvimento'
 

@@ -38,4 +38,50 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['name'] = user.nome
         token['email'] = user.email
         token['role'] = user.tipo
+        token['professional_role'] = user.cargo_profissional
         return token
+    
+class UserProfileSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='nome')
+    professional_role = serializers.CharField(source='cargo_profissional')
+    role = serializers.CharField(source='tipo', read_only=True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'name', 'email', 'professional_role', 'role']
+        read_only_fields = ['id', 'email', 'role']
+
+class ChangePasswordSerializer(serializers.Serializer):
+    current_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True, min_length=8)
+    confirm_password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        if data['new_password'] != data['confirm_password']:
+            raise serializers.ValidationError({'confirm_password': 'As senhas não conferem.'})
+        return data
+
+class UserListSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='nome', read_only=True)
+    professional_role = serializers.CharField(source='cargo_profissional', read_only=True)
+    role = serializers.CharField(source='tipo', read_only=True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'name', 'email', 'professional_role', 'role']
+
+class UserTipoUpdateSerializer(serializers.ModelSerializer):
+    role = serializers.CharField(source='tipo')
+
+    class Meta:
+        model = User
+        fields = ['role']
+
+    def validate_role(self, novo_tipo):
+        solicitante = self.context['request'].user
+        if novo_tipo not in [User.COMUM, User.GESTOR, User.ADMINISTRADOR]:
+            raise serializers.ValidationError('Tipo de usuário inválido.')
+        # Regra de hierarquia: Gestor não pode promover para Administrador
+        if solicitante.tipo == User.GESTOR and novo_tipo == User.ADMINISTRADOR:
+            raise serializers.ValidationError('Gestores não podem promover usuários para Administrador.')
+        return novo_tipo
