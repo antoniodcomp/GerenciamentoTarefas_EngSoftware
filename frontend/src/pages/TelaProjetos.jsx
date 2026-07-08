@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProjetos } from '../hooks/useProjetos';
+import { usePerfil } from '../hooks/usePerfil';
 import ProjetoCard from '../components/ProjetoCard';
 
 function TelaProjetos() {
@@ -8,6 +9,10 @@ function TelaProjetos() {
   const navigate = useNavigate();
 
   const { data: projects = [], isPending: isLoading, isError } = useProjetos();
+
+  const { data: usuario } = usePerfil();
+  const tipoUsuario = usuario?.tipo_usuario || usuario?.tipo;
+  const podeAdicionar = tipoUsuario === 'GESTOR' || tipoUsuario === 'ADMINISTRADOR';
 
   // Filtra projetos em tempo real (busca pelo nome ou descrição)
   const filteredProjects = projects.filter(project => {
@@ -24,9 +29,11 @@ function TelaProjetos() {
           <h1 style={styles.title}>Meus Projetos</h1>
           <p style={styles.subtitle}>Gerencie e acompanhe o andamento de seus projetos colaborativos</p>
         </div>
-        <button onClick={() => navigate('/projetos/novo')} style={styles.addButton}>
-          + Novo Projeto
-        </button>
+        {podeAdicionar && (
+          <button onClick={() => navigate('/projetos/novo')} style={styles.addButton}>
+            + Novo Projeto
+          </button>
+        )}
       </header>
 
       <div style={styles.searchBarContainer}>
@@ -52,7 +59,7 @@ function TelaProjetos() {
           <p style={styles.emptyText}>
             {searchTerm ? 'Nenhum projeto encontrado para a sua busca.' : 'Você ainda não possui projetos cadastrados.'}
           </p>
-          {!searchTerm && (
+          {!searchTerm && podeAdicionar && (
             <button onClick={() => navigate('/projetos/novo')} style={styles.emptyButton}>
               Criar Primeiro Projeto
             </button>
