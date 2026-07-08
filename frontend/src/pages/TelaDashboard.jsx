@@ -1,57 +1,36 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getProjectDashboard } from '../services/projectService';
-import { createProjectTarefa, updateTaskStatus } from '../services/taskService';
+import { useProjectDashboard, useCreateTarefa, useUpdateTaskStatus } from '../hooks/useTarefas';
+import { TarefaList } from '../components/TarefaList';
 
 function TelaDashboard() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+
+  const { data, isLoading, isError } = useProjectDashboard(id);
+  const { mutateAsync: createTarefa, isPending: taskLoading, error: taskErrorObj } = useCreateTarefa();
+  const { mutate: updateStatus } = useUpdateTaskStatus();
 
   // Estados para nova tarefa (UC15)
   const [taskName, setTaskName] = useState('');
   const [taskDesc, setTaskDesc] = useState('');
   const [taskDeadline, setTaskDeadline] = useState('');
-  const [taskLoading, setTaskLoading] = useState(false);
-  const [taskError, setTaskError] = useState('');
-
-  useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        setLoading(true);
-        const res = await getProjectDashboard(id);
-        setData(res);
-        setError('');
-      } catch (err) {
-        console.error(err);
-        setError('Erro ao carregar o dashboard do projeto. Certifique-se de que o backend está rodando.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDashboard();
-  }, [id]);
+  const [localTaskError, setLocalTaskError] = useState('');
 
   const handleCreateTask = async (e) => {
     e.preventDefault();
-    if (!taskName.trim()) { setTaskError('O título da tarefa é obrigatório.'); return; }
-    if (!taskDeadline) { setTaskError('O prazo é obrigatório.'); return; }
+    if (!taskName.trim()) { setLocalTaskError('O título da tarefa é obrigatório.'); return; }
+    if (!taskDeadline) { setLocalTaskError('O prazo é obrigatório.'); return; }
+
+    setLocalTaskError('');
 
     try {
-      setTaskLoading(true);
-      setTaskError('');
-      await createProjectTarefa({
+      await createTarefa({
         name: taskName.trim(),
         description: taskDesc.trim(),
         deadline: taskDeadline,
         project: id
       });
-      // Recarregar os dados do dashboard após o cadastro
-      const res = await getProjectDashboard(id);
-      setData(res);
       // Limpar formulário
       setTaskName('');
       setTaskDesc('');
@@ -63,27 +42,19 @@ function TelaDashboard() {
             const messages = Object.entries(backendErrors)
               .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(' ') : msgs}`)
               .join(' | ');
-            setTaskError(messages || 'Erro ao criar tarefa. Verifique os dados.');
+            setLocalTaskError(messages || 'Erro ao criar tarefa. Verifique os dados.');
           }
       } else {
-          setTaskError('Erro ao criar tarefa. Tente novamente.');
+          setLocalTaskError('Erro ao criar tarefa. Tente novamente.');
       }
-    } finally {
-      setTaskLoading(false);
     }
   };
 
-  const handleTaskStatusChange = async (taskId, newStatus, e) => {
-    e.stopPropagation(); // Previne o redirecionamento ao clicar no select
-    try {
-      await updateTaskStatus(taskId, newStatus);
-      // Recarrega o dashboard para atualizar as estatísticas e a barra de progresso
-      const res = await getProjectDashboard(id);
-      setData(res);
-    } catch (err) {
-      console.error('Error updating task status:', err);
-      alert('Erro ao atualizar status da tarefa');
-    }
+  const handleTaskStatusChange = (taskId, newStatus, e) => {
+    e.stopPropagation();
+    updateStatus({ taskId, newStatus }, {
+      onError: () => alert('Erro ao atualizar status da tarefa')
+    });
   };
 
   const formatDate = (dateString) => {
@@ -93,34 +64,20 @@ function TelaDashboard() {
     return utcDate.toLocaleDateString('pt-BR');
   };
 
-  const getTaskBadgeStyle = (status) => {
-    let bgColor = '#3b82f6';
-    if (status === 'PENDENTE') bgColor = '#f59e0b';
-    if (status === 'CONCLUIDA') bgColor = '#10b981';
-    
-    return {
-      marginLeft: '10px',
-      fontSize: '12px',
-      padding: '4px 10px',
-      borderRadius: '12px',
-      backgroundColor: bgColor,
-      color: '#fff',
-      fontWeight: 'bold'
-    };
-  };
-
-  if (loading) {
+  if (isLoading) {
     return <div style={styles.message}>Carregando painel do projeto...</div>;
   }
 
-  if (error) {
+  if (isError || !data) {
     return (
       <div style={styles.container}>
         <button onClick={() => navigate('/projetos')} style={styles.backBtn}>Voltar para Projetos</button>
-        <div style={{ ...styles.message, ...styles.error }}>{error}</div>
+        <div style={{ ...styles.message, ...styles.error }}>Erro ao carregar o dashboard do projeto. Certifique-se de que o backend está rodando.</div>
       </div>
     );
   }
+
+  const taskError = localTaskError || (taskErrorObj && taskErrorObj.message);
 
   return (
     <div style={styles.container}>
@@ -208,37 +165,7 @@ function TelaDashboard() {
       {/* Lista de Todas as Tarefas */}
       <section style={styles.allTasksSection}>
         <h3>📋 Todas as Tarefas</h3>
-        {data.all_tasks && data.all_tasks.length > 0 ? (
-          <div style={styles.taskList}>
-            {data.all_tasks.map(task => (
-              <div 
-                key={task.id} 
-                style={{ ...styles.taskCard, backgroundColor: 'var(--bg)', cursor: 'pointer' }}
-                onClick={() => navigate(`/projetos/${id}/tarefas/${task.id}`)}
-                title="Clique para ver os detalhes da tarefa"
-              >
-                <div>
-                  <strong>{task.name}</strong>
-                  <select 
-                    value={task.status} 
-                    onChange={(e) => handleTaskStatusChange(task.id, e.target.value, e)}
-                    onClick={(e) => e.stopPropagation()}
-                    style={{ ...getTaskBadgeStyle(task.status), border: 'none', cursor: 'pointer', outline: 'none' }}
-                  >
-                    <option value="PENDENTE">PENDENTE</option>
-                    <option value="EM_ANDAMENTO">EM ANDAMENTO</option>
-                    <option value="CONCLUIDA">CONCLUÍDA</option>
-                  </select>
-                </div>
-                <div style={{ color: 'var(--text)', fontSize: '14px' }}>
-                  Prazo: {formatDate(task.deadline)}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p style={{ color: 'var(--text)' }}>Nenhuma tarefa cadastrada neste projeto ainda.</p>
-        )}
+        <TarefaList projetoId={id} />
       </section>
 
       {/* Seção de Criação de Tarefa (UC15) */}

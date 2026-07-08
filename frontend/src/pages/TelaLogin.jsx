@@ -1,45 +1,55 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { login, solicitarCodigoRecuperacao } from '../services/authService';
+import { useLogin, useSolicitarCodigoRecuperacao } from '../hooks/useAuth';
 
 function TelaLogin() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-  const [erro, setErro] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const loginMutation = useLogin();
+  const solicitarCodigoMutation = useSolicitarCodigoRecuperacao();
+
+  let erro = '';
+  if (loginMutation.isError) {
+    if (loginMutation.error.response && loginMutation.error.response.status === 401) {
+      erro = 'E-mail ou senha incorretos.';
+    } else {
+      erro = 'Erro inesperado, checar console';
+    }
+  } else if (solicitarCodigoMutation.isError) {
+    erro = solicitarCodigoMutation.error.response?.data?.error || 'Erro ao enviar código de recuperação.';
+  }
+
+  const handleSubmit = (e) => {
     e.preventDefault();
     console.log('Dados de Login:', { email, senha });
-    setErro('');
 
-    try {
-      const response = await login({ email, password: senha });
-      localStorage.setItem('token', response.access);
-      navigate('/projetos');
-    } catch (error) {
-      console.error('Erro de login:', error);
-      if (error.response && error.response.status === 401) {
-        setErro('E-mail ou senha incorretos.');
-      } else {
-        setErro('Erro inesperado, checar console');
+    loginMutation.mutate({ email, password: senha }, {
+      onSuccess: (response) => {
+        localStorage.setItem('token', response.access);
+        navigate('/projetos');
+      },
+      onError: (error) => {
+        console.error('Erro de login:', error);
       }
-    }
+    });
   };
 
-  const handleForgotPassword = async () => {
+  const handleForgotPassword = () => {
     if (!email) {
-      setErro('Por favor, informe seu e-mail no campo acima antes de solicitar a recuperação.');
+      alert('Por favor, informe seu e-mail no campo acima antes de solicitar a recuperação.');
       return;
     }
-    setErro('');
-    try {
-      await solicitarCodigoRecuperacao(email);
-      navigate('/reconfirmar-senha', { state: { email } });
-    } catch (error) {
-      console.error(error);
-      setErro(error.response?.data?.error || 'Erro ao enviar código de recuperação.');
-    }
+    
+    solicitarCodigoMutation.mutate(email, {
+      onSuccess: () => {
+        navigate('/reconfirmar-senha', { state: { email } });
+      },
+      onError: (error) => {
+        console.error(error);
+      }
+    });
   };
 
   return (
