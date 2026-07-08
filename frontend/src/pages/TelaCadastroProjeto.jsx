@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCreateProjeto } from '../hooks/useProjetos';
+import { usePerfil } from '../hooks/usePerfil';
 
 function TelaCadastroProjeto() {
   const [name, setName] = useState('');
@@ -12,6 +13,9 @@ function TelaCadastroProjeto() {
   const createProjetoMutation = useCreateProjeto();
   const loading = createProjetoMutation.isPending;
   const error = formError;
+
+  const { data: usuario, isPending: carregandoPerfil } = usePerfil();
+  const tipoUsuario = usuario?.role || usuario?.tipo;
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -66,6 +70,25 @@ function TelaCadastroProjeto() {
       }
     });
   };
+
+  // Intercepta o carregamento para não exibir o form precocemente
+  if (carregandoPerfil) {
+    return <div style={{ ...styles.container, textAlign: 'center' }}>Verificando permissões...</div>;
+  }
+
+  // Bloqueia o acesso caso o usuário seja do tipo COMUM (tentativa via URL)
+  if (usuario && tipoUsuario !== 'GESTOR' && tipoUsuario !== 'ADMINISTRADOR') {
+    return (
+      <div style={styles.container}>
+        <div style={styles.errorMessage}>
+          <strong>Acesso Negado:</strong> Apenas Gestores e Administradores podem cadastrar novos projetos.
+        </div>
+        <button onClick={() => navigate('/projetos')} style={{ ...styles.cancelButton, marginTop: '20px' }}>
+          Voltar para Meus Projetos
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.container}>
