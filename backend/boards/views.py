@@ -8,11 +8,12 @@ from .serializers import ProjetoSerializer, ProjetoDashboardSerializer, TarefaCr
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.exceptions import PermissionDenied
 from django.db.models import Q
+from .permissions import IsDonoOuParticipanteDoProjeto
 
 class ProjetoViewSet(viewsets.ModelViewSet):
     # queryset = Projeto.objects.all().order_by('-criado_em')
     serializer_class = ProjetoSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsDonoOuParticipanteDoProjeto]
 
     def perform_create(self, serializer):
         # Salva o projeto vinculando o dono (owner) como o usuário autenticado atual
@@ -67,7 +68,7 @@ class ProjetoViewSet(viewsets.ModelViewSet):
 
 class TarefaViewSet(viewsets.ModelViewSet):
     serializer_class = TarefaCreateSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsDonoOuParticipanteDoProjeto]
 
         # Restringe a busca apenas para tarefas dos projetos do usuário
     def get_queryset(self):
@@ -112,7 +113,7 @@ class TarefaViewSet(viewsets.ModelViewSet):
         return TarefaCreateSerializer
 
 class SubtarefaViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsDonoOuParticipanteDoProjeto]
 
     def get_serializer_class(self):
         if self.action in ['update', 'partial_update']:
@@ -146,7 +147,7 @@ class SubtarefaViewSet(viewsets.ModelViewSet):
 
 class AnexoViewSet(viewsets.ModelViewSet):
     serializer_class = AnexoSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsDonoOuParticipanteDoProjeto]
     parser_classes = [MultiPartParser, FormParser]
 
     def get_queryset(self):
@@ -167,7 +168,7 @@ class AnexoViewSet(viewsets.ModelViewSet):
 
 class ComentarioTarefaViewSet(viewsets.ModelViewSet):
     serializer_class = ComentarioTarefaSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsDonoOuParticipanteDoProjeto]
 
     def get_queryset(self):
         user = self.request.user
