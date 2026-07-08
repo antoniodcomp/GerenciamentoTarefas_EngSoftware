@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePerfil, useUsuarios, useUpdatePerfil, useAlterarSenha, useAtualizarTipoUsuario } from '../hooks/usePerfil';
+import { User, Mail, Briefcase, Lock, Shield, Users, CheckCircle, AlertCircle, LogOut } from 'lucide-react';
 
 function TelaPerfilUsuario() {
   const navigate = useNavigate();
@@ -87,13 +88,9 @@ function TelaPerfilUsuario() {
     });
   };
 
-  const getTipoBadgeStyle = (tipo) => {
-    const cores = {
-      ADMINISTRADOR: { bg: '#fef3c7', color: '#d97706' },
-      GESTOR: { bg: '#000', color: '#fff' },
-      COMUM: { bg: '#e0f2fe', color: '#0369a1' },
-    };
-    return cores[tipo] || cores.COMUM;
+  const getTipoBadgeClass = (tipo) => {
+    if (tipo === 'ADMINISTRADOR' || tipo === 'GESTOR') return 'bg-slate-900 text-white';
+    return 'bg-gray-100 text-gray-800';
   };
 
   const getTipoLabel = (tipo) => {
@@ -103,223 +100,238 @@ function TelaPerfilUsuario() {
 
   const getIniciais = (nome) => nome.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
 
-  // Opções de tipo disponíveis conforme hierarquia
   const getTiposDisponiveis = () => {
     if (usuario?.role === 'ADMINISTRADOR') return ['COMUM', 'GESTOR', 'ADMINISTRADOR'];
     if (usuario?.role === 'GESTOR') return ['COMUM', 'GESTOR'];
     return [];
   };
 
-  if (isLoadingPerfil) return <div style={styles.container}>Carregando...</div>;
+  if (isLoadingPerfil) return <div className="bg-gray-50 min-h-screen p-8 text-gray-500 text-sm">Carregando...</div>;
   if (!usuario) return null;
 
-  const badgeStyle = getTipoBadgeStyle(usuario.role);
-
   return (
-    <div style={styles.container}>
-      <h1 style={styles.pageTitle}>Meu Perfil</h1>
-      <p style={styles.pageSubtitle}>Gerencie suas informações pessoais e configurações de segurança</p>
-
-      <div style={styles.card}>
-        <div style={styles.profileHeader}>
-          <div style={styles.avatar}>{getIniciais(usuario.name)}</div>
+    <div className="bg-gray-50 min-h-screen p-8">
+      <div className="max-w-4xl mx-auto w-full text-left">
+        <div className="flex justify-between items-start mb-8">
           <div>
-            <h2 style={styles.profileName}>{usuario.name}</h2>
-            <p style={styles.profileCargo}>{usuario.professional_role}</p>
-            <div style={styles.profileBadgeRow}>
-              <span style={{ ...styles.tipoBadge, backgroundColor: badgeStyle.bg, color: badgeStyle.color }}>
-                {getTipoLabel(usuario.role)}
-              </span>
-              <span style={styles.profileEmail}>{usuario.email}</span>
+            <h1 className="text-gray-900 font-bold text-3xl mb-2 m-0">Meu Perfil</h1>
+            <p className="text-gray-500 text-sm m-0">Gerencie suas informações pessoais e configurações de segurança</p>
+          </div>
+          <button
+            onClick={() => { localStorage.removeItem('token'); navigate('/login'); }}
+            className="flex items-center gap-2 bg-white border border-gray-200 text-red-600 rounded-md px-4 py-2 hover:bg-red-50 text-sm font-medium transition-colors shadow-sm"
+          >
+            <LogOut size={16} />
+            Sair da Conta
+          </button>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+          <div className="flex items-center gap-5">
+            <div className="h-16 w-16 bg-blue-600 text-white rounded-full flex items-center justify-center text-xl font-bold shrink-0">
+              {getIniciais(usuario.name)}
+            </div>
+            <div>
+              <h2 className="text-gray-900 font-bold text-2xl mb-1 m-0">{usuario.name}</h2>
+              <p className="text-gray-500 text-sm mb-2 m-0">{usuario.professional_role}</p>
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${getTipoBadgeClass(usuario.role)}`}>
+                  {getTipoLabel(usuario.role)}
+                </span>
+                <span className="text-gray-500 text-sm">{usuario.email}</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div style={styles.abasContainer}>
-        <button style={{ ...styles.aba, ...(abaAtiva === 'informacoes' ? styles.abaAtiva : {}) }} onClick={() => { setAbaAtiva('informacoes'); setMensagem(''); setErro(''); }}>
-          Informações Pessoais
-        </button>
-        <button style={{ ...styles.aba, ...(abaAtiva === 'seguranca' ? styles.abaAtiva : {}) }} onClick={() => { setAbaAtiva('seguranca'); setMensagem(''); setErro(''); }}>
-          Segurança
-        </button>
-        {podeGerenciarUsuarios && (
-          <button style={{ ...styles.aba, ...(abaAtiva === 'gerenciar' ? styles.abaAtiva : {}) }} onClick={() => { setAbaAtiva('gerenciar'); setMensagem(''); setErro(''); }}>
-            Gerenciar Usuários
+        <div className="flex gap-2 mb-6 flex-wrap">
+          <button 
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${abaAtiva === 'informacoes' ? 'bg-slate-900 text-white' : 'bg-transparent text-gray-500 hover:bg-gray-200 border border-gray-200'}`} 
+            onClick={() => { setAbaAtiva('informacoes'); setMensagem(''); setErro(''); }}
+          >
+            Informações Pessoais
           </button>
+          <button 
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${abaAtiva === 'seguranca' ? 'bg-slate-900 text-white' : 'bg-transparent text-gray-500 hover:bg-gray-200 border border-gray-200'}`} 
+            onClick={() => { setAbaAtiva('seguranca'); setMensagem(''); setErro(''); }}
+          >
+            Segurança
+          </button>
+          {podeGerenciarUsuarios && (
+            <button 
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${abaAtiva === 'gerenciar' ? 'bg-slate-900 text-white' : 'bg-transparent text-gray-500 hover:bg-gray-200 border border-gray-200'}`} 
+              onClick={() => { setAbaAtiva('gerenciar'); setMensagem(''); setErro(''); }}
+            >
+              Gerenciar Usuários
+            </button>
+          )}
+        </div>
+
+        {mensagem && (
+          <div className="bg-green-50 text-green-700 p-4 rounded-md mb-4 flex items-center gap-2 text-sm">
+            <CheckCircle size={18} />
+            {mensagem}
+          </div>
+        )}
+        {erro && (
+          <div className="bg-red-50 text-red-700 p-4 rounded-md mb-4 flex items-center gap-2 text-sm">
+            <AlertCircle size={18} />
+            {erro}
+          </div>
+        )}
+
+        {abaAtiva === 'informacoes' && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-gray-900 font-bold text-lg mb-1 m-0">Informações Pessoais</h3>
+            <p className="text-gray-500 text-sm mb-6 m-0">Atualize suas informações de perfil</p>
+            
+            <div className="mb-5">
+              <label className="block text-gray-900 font-bold text-sm mb-2">Nome Completo</label>
+              <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 border-none rounded-md">
+                <User size={18} className="text-gray-500" />
+                <input
+                  type="text"
+                  className="bg-transparent border-none outline-none flex-1 text-sm text-gray-900"
+                  value={nomeEdit}
+                  onChange={e => setNomeEdit(e.target.value)}
+                />
+              </div>
+            </div>
+            
+            <div className="mb-5">
+              <label className="block text-gray-900 font-bold text-sm mb-2">E-mail</label>
+              <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 border-none rounded-md opacity-70">
+                <Mail size={18} className="text-gray-500" />
+                <span className="text-sm text-gray-900">{usuario.email}</span>
+              </div>
+            </div>
+            
+            <div className="mb-5">
+              <label className="block text-gray-900 font-bold text-sm mb-2">Cargo Profissional</label>
+              <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 border-none rounded-md">
+                <Briefcase size={18} className="text-gray-500" />
+                <input
+                  type="text"
+                  className="bg-transparent border-none outline-none flex-1 text-sm text-gray-900"
+                  value={cargoEdit}
+                  onChange={e => setCargoEdit(e.target.value)}
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end mt-6">
+              <button className="bg-slate-900 text-white rounded-md px-4 py-2 hover:bg-slate-800 text-sm font-medium" onClick={handleSalvarPerfil}>
+                Salvar Alterações
+              </button>
+            </div>
+          </div>
+        )}
+
+        {abaAtiva === 'seguranca' && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-gray-900 font-bold text-lg mb-1 m-0">Alterar Senha</h3>
+            <p className="text-gray-500 text-sm mb-6 m-0">Atualize sua senha para manter sua conta segura</p>
+            
+            <div className="mb-5">
+              <label className="block text-gray-900 font-bold text-sm mb-2">Senha Atual</label>
+              <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 border-none rounded-md">
+                <Lock size={18} className="text-gray-500" />
+                <input type="password" placeholder="••••••••" className="bg-transparent border-none outline-none flex-1 text-sm text-gray-900" value={senhaAtual} onChange={e => setSenhaAtual(e.target.value)} />
+              </div>
+            </div>
+            
+            <div className="mb-5">
+              <label className="block text-gray-900 font-bold text-sm mb-2">Nova Senha</label>
+              <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 border-none rounded-md">
+                <Shield size={18} className="text-gray-500" />
+                <input type="password" placeholder="••••••••" className="bg-transparent border-none outline-none flex-1 text-sm text-gray-900" value={novaSenha} onChange={e => setNovaSenha(e.target.value)} />
+              </div>
+              <p className="mt-1.5 text-xs text-gray-500 m-0">A senha deve ter no mínimo 8 caracteres</p>
+            </div>
+            
+            <div className="mb-5">
+              <label className="block text-gray-900 font-bold text-sm mb-2">Confirmar Nova Senha</label>
+              <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 border-none rounded-md">
+                <Lock size={18} className="text-gray-500" />
+                <input type="password" placeholder="••••••••" className="bg-transparent border-none outline-none flex-1 text-sm text-gray-900" value={confirmarSenha} onChange={e => setConfirmarSenha(e.target.value)} />
+              </div>
+            </div>
+            
+            <div className="flex justify-end mt-6">
+              <button className="bg-slate-900 text-white rounded-md px-4 py-2 hover:bg-slate-800 text-sm font-medium" onClick={handleAlterarSenha}>
+                Alterar Senha
+              </button>
+            </div>
+          </div>
+        )}
+
+        {abaAtiva === 'gerenciar' && podeGerenciarUsuarios && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-gray-900 font-bold text-lg mb-1 m-0">Gerenciar Usuários</h3>
+            <p className="text-gray-500 text-sm mb-6 m-0">
+              {usuario.role === 'ADMINISTRADOR'
+                ? 'Como Administrador, você pode definir qualquer tipo de acesso.'
+                : 'Como Gestor, você pode promover usuários até Gestor.'}
+            </p>
+            
+            {loadingUsuarios && <div className="text-gray-500 text-sm py-4">Carregando usuários...</div>}
+            
+            {!loadingUsuarios && usuarios.length === 0 && (
+              <div className="text-center py-10 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                <Users size={32} className="mx-auto text-gray-400 mb-2" />
+                <p className="text-sm text-gray-500 m-0">Nenhum usuário encontrado.</p>
+              </div>
+            )}
+            
+            {!loadingUsuarios && usuarios.length > 0 && (
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-left">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="py-3 px-4 text-sm font-semibold text-gray-500">Nome</th>
+                      <th className="py-3 px-4 text-sm font-semibold text-gray-500">E-mail</th>
+                      <th className="py-3 px-4 text-sm font-semibold text-gray-500">Cargo</th>
+                      <th className="py-3 px-4 text-sm font-semibold text-gray-500">Tipo</th>
+                      {usuario.id !== undefined && <th className="py-3 px-4 text-sm font-semibold text-gray-500">Ação</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {usuarios.map(u => (
+                      <tr key={u.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
+                        <td className="py-3 px-4 text-sm text-gray-900">{u.name}</td>
+                        <td className="py-3 px-4 text-sm text-gray-900">{u.email}</td>
+                        <td className="py-3 px-4 text-sm text-gray-900">{u.professional_role}</td>
+                        <td className="py-3 px-4 text-sm">
+                          <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${getTipoBadgeClass(u.role)}`}>
+                            {getTipoLabel(u.role)}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-sm">
+                          {u.id !== usuario.id ? (
+                            <select
+                              value={u.role}
+                              onChange={e => handleAtualizarTipo(u.id, e.target.value)}
+                              className="bg-gray-100 border-none rounded-md px-3 py-1.5 text-sm text-gray-900 cursor-pointer outline-none focus:ring-2 focus:ring-slate-900"
+                            >
+                              {getTiposDisponiveis().map(tipo => (
+                                <option key={tipo} value={tipo}>{getTipoLabel(tipo)}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <span className="text-xs text-gray-500 bg-gray-100 px-2.5 py-1 rounded-md">Você</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         )}
       </div>
-
-      {mensagem && <div style={styles.successMsg}>{mensagem}</div>}
-      {erro && <div style={styles.errorMsg}>{erro}</div>}
-
-      {abaAtiva === 'informacoes' && (
-  <div style={styles.card}>
-    <h3 style={styles.cardTitle}>Informações Pessoais</h3>
-    <p style={styles.cardSubtitle}>Atualize suas informações de perfil</p>
-    <div style={styles.fieldGroup}>
-      <label style={styles.label}>Nome Completo</label>
-      <div style={styles.fieldBox}>
-        <span style={styles.fieldIcon}>👤</span>
-        <input
-          type="text"
-          style={styles.inputField}
-          value={nomeEdit}
-          onChange={e => setNomeEdit(e.target.value)}
-        />
-      </div>
-    </div>
-    <div style={styles.fieldGroup}>
-      <label style={styles.label}>E-mail</label>
-      <div style={styles.fieldBox}>
-        <span style={styles.fieldIcon}>✉️</span>
-        <span style={styles.fieldValue}>{usuario.email}</span>
-      </div>
-    </div>
-    <div style={styles.fieldGroup}>
-      <label style={styles.label}>Cargo Profissional</label>
-      <div style={styles.fieldBox}>
-        <span style={styles.fieldIcon}>💼</span>
-        <input
-          type="text"
-          style={styles.inputField}
-          value={cargoEdit}
-          onChange={e => setCargoEdit(e.target.value)}
-        />
-      </div>
-    </div>
-    <div style={styles.buttonRow}>
-      <button style={styles.saveButton} onClick={handleSalvarPerfil}>Salvar Alterações</button>
-    </div>
-  </div>
-)}
-
-      {abaAtiva === 'seguranca' && (
-        <div style={styles.card}>
-          <h3 style={styles.cardTitle}>Alterar Senha</h3>
-          <p style={styles.cardSubtitle}>Atualize sua senha para manter sua conta segura</p>
-          <div style={styles.fieldGroup}>
-            <label style={styles.label}>Senha Atual</label>
-            <div style={styles.fieldBox}>
-              <span style={styles.fieldIcon}>🔒</span>
-              <input type="password" placeholder="••••••••" style={styles.inputField} value={senhaAtual} onChange={e => setSenhaAtual(e.target.value)} />
-            </div>
-          </div>
-          <div style={styles.fieldGroup}>
-            <label style={styles.label}>Nova Senha</label>
-            <div style={styles.fieldBox}>
-              <span style={styles.fieldIcon}>🔒</span>
-              <input type="password" placeholder="••••••••" style={styles.inputField} value={novaSenha} onChange={e => setNovaSenha(e.target.value)} />
-            </div>
-            <p style={styles.fieldHint}>A senha deve ter no mínimo 8 caracteres</p>
-          </div>
-          <div style={styles.fieldGroup}>
-            <label style={styles.label}>Confirmar Nova Senha</label>
-            <div style={styles.fieldBox}>
-              <span style={styles.fieldIcon}>🔒</span>
-              <input type="password" placeholder="••••••••" style={styles.inputField} value={confirmarSenha} onChange={e => setConfirmarSenha(e.target.value)} />
-            </div>
-          </div>
-          <div style={styles.buttonRow}>
-            <button style={styles.saveButton} onClick={handleAlterarSenha}>Alterar Senha</button>
-          </div>
-        </div>
-      )}
-
-      {abaAtiva === 'gerenciar' && podeGerenciarUsuarios && (
-        <div style={styles.card}>
-          <h3 style={styles.cardTitle}>Gerenciar Usuários</h3>
-          <p style={styles.cardSubtitle}>
-            {usuario.role === 'ADMINISTRADOR'
-              ? 'Como Administrador, você pode definir qualquer tipo de acesso.'
-              : 'Como Gestor, você pode promover usuários até Gestor.'}
-          </p>
-          {loadingUsuarios && <p style={{ color: 'var(--text)' }}>Carregando usuários...</p>}
-          {!loadingUsuarios && usuarios.length === 0 && (
-            <div style={styles.emptyState}><p style={styles.emptyText}>Nenhum usuário encontrado.</p></div>
-          )}
-          {!loadingUsuarios && usuarios.length > 0 && (
-            <table style={styles.table}>
-              <thead>
-                <tr>
-                  <th style={styles.th}>Nome</th>
-                  <th style={styles.th}>E-mail</th>
-                  <th style={styles.th}>Cargo</th>
-                  <th style={styles.th}>Tipo</th>
-                  {usuario.id !== undefined && <th style={styles.th}>Ação</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {usuarios.map(u => (
-                  <tr key={u.id}>
-                    <td style={styles.td}>{u.name}</td>
-                    <td style={styles.td}>{u.email}</td>
-                    <td style={styles.td}>{u.professional_role}</td>
-                    <td style={styles.td}>
-                      <span style={{ ...styles.tipoBadge, backgroundColor: getTipoBadgeStyle(u.role).bg, color: getTipoBadgeStyle(u.role).color }}>
-                        {getTipoLabel(u.role)}
-                      </span>
-                    </td>
-                    <td style={styles.td}>
-                      {u.id !== usuario.id ? (
-                        <select
-                          value={u.role}
-                          onChange={e => handleAtualizarTipo(u.id, e.target.value)}
-                          style={styles.select}
-                        >
-                          {getTiposDisponiveis().map(tipo => (
-                            <option key={tipo} value={tipo}>{getTipoLabel(tipo)}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <span style={{ fontSize: '12px', color: 'var(--text)' }}>Você</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      )}
     </div>
   );
 }
-
-const styles = {
-  container: { padding: '40px 20px', maxWidth: '900px', margin: '0 auto', width: '100%', boxSizing: 'border-box', textAlign: 'left' },
-  pageTitle: { margin: '0 0 8px 0', fontSize: '32px', fontWeight: '600', color: 'var(--text-h)' },
-  pageSubtitle: { fontSize: '16px', margin: '0 0 30px 0', color: 'var(--text)' },
-  card: { backgroundColor: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', marginBottom: '20px', boxShadow: 'var(--shadow)', boxSizing: 'border-box' },
-  profileHeader: { display: 'flex', alignItems: 'center', gap: '20px' },
-  avatar: { width: '72px', height: '72px', borderRadius: '50%', backgroundColor: '#3b82f6', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: '700', flexShrink: 0 },
-  profileName: { margin: '0 0 4px 0', fontSize: '22px', fontWeight: '600', color: 'var(--text-h)' },
-  profileCargo: { margin: '0 0 8px 0', fontSize: '14px', color: 'var(--text)' },
-  profileBadgeRow: { display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' },
-  tipoBadge: { fontSize: '12px', fontWeight: '600', padding: '3px 10px', borderRadius: '20px' },
-  profileEmail: { fontSize: '14px', color: 'var(--text)' },
-  abasContainer: { display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' },
-  aba: { padding: '8px 18px', borderRadius: '8px', border: '1px solid var(--border)', backgroundColor: 'transparent', color: 'var(--text)', fontSize: '14px', fontWeight: '500', cursor: 'pointer' },
-  abaAtiva: { backgroundColor: 'var(--bg)', color: 'var(--text-h)', fontWeight: '600', boxShadow: 'var(--shadow)' },
-  cardTitle: { margin: '0 0 4px 0', fontSize: '18px', fontWeight: '600', color: 'var(--text-h)' },
-  cardSubtitle: { margin: '0 0 24px 0', fontSize: '14px', color: 'var(--text)' },
-  fieldGroup: { marginBottom: '18px' },
-  label: { display: 'block', fontSize: '14px', fontWeight: '500', color: 'var(--text-h)', marginBottom: '8px' },
-  fieldBox: { display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px', backgroundColor: 'var(--code-bg)', border: '1px solid var(--border)', borderRadius: '8px' },
-  fieldIcon: { fontSize: '16px', flexShrink: 0 },
-  fieldValue: { fontSize: '15px', color: 'var(--text-h)' },
-  inputField: { flex: 1, border: 'none', backgroundColor: 'transparent', fontSize: '15px', color: 'var(--text-h)', outline: 'none' },
-  fieldHint: { margin: '6px 0 0 0', fontSize: '12px', color: 'var(--text)' },
-  buttonRow: { display: 'flex', justifyContent: 'flex-end', marginTop: '8px' },
-  saveButton: { padding: '10px 24px', backgroundColor: 'var(--text-h)', color: 'var(--bg)', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' },
-  successMsg: { padding: '12px 16px', backgroundColor: '#dcfce7', color: '#166534', borderRadius: '8px', marginBottom: '16px', fontSize: '14px' },
-  errorMsg: { padding: '12px 16px', backgroundColor: '#fee2e2', color: '#991b1b', borderRadius: '8px', marginBottom: '16px', fontSize: '14px' },
-  emptyState: { textAlign: 'center', padding: '40px 20px', backgroundColor: 'var(--code-bg)', borderRadius: '8px', border: '1px dashed var(--border)' },
-  emptyText: { fontSize: '15px', color: 'var(--text)', margin: 0 },
-  table: { width: '100%', borderCollapse: 'collapse' },
-  th: { textAlign: 'left', padding: '10px 12px', fontSize: '13px', fontWeight: '600', color: 'var(--text)', borderBottom: '1px solid var(--border)' },
-  td: { padding: '12px', fontSize: '14px', color: 'var(--text-h)', borderBottom: '1px solid var(--border)' },
-  select: { padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--border)', backgroundColor: 'var(--bg)', color: 'var(--text-h)', fontSize: '13px', cursor: 'pointer' },
-};
 
 export default TelaPerfilUsuario;

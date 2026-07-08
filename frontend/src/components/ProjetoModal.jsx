@@ -1,23 +1,37 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useCreateProjeto } from '../hooks/useProjetos';
 import { usePerfil } from '../hooks/usePerfil';
-import { X, Calendar as CalendarIcon } from 'lucide-react';
+import { X } from 'lucide-react';
 
-function TelaCadastroProjeto() {
+export default function ProjetoModal({ isOpen, onClose }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [startline, setStartline] = useState('');
   const [deadline, setDeadline] = useState('');
   const [formError, setFormError] = useState('');
-  const navigate = useNavigate();
 
   const createProjetoMutation = useCreateProjeto();
   const loading = createProjetoMutation.isPending;
-  const error = formError;
 
   const { data: usuario, isPending: carregandoPerfil } = usePerfil();
   const tipoUsuario = usuario?.role || usuario?.tipo;
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      const handleEsc = (e) => {
+        if (e.key === 'Escape') onClose();
+      };
+      window.addEventListener('keydown', handleEsc);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleEsc);
+      };
+    }
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -39,20 +53,21 @@ function TelaCadastroProjeto() {
 
     setFormError('');
 
-    const projectData = {
+    createProjetoMutation.mutate({
       name: name.trim(),
       description: description.trim() || null,
       startline: startline || null,
       deadline,
-    };
-
-    createProjetoMutation.mutate(projectData, {
+    }, {
       onSuccess: () => {
-        navigate('/projetos');
+        setName('');
+        setDescription('');
+        setStartline('');
+        setDeadline('');
+        onClose();
       },
       onError: (err) => {
         console.error(err);
-        
         if (err.response && err.response.data) {
           const backendErrors = err.response.data;
           if (typeof backendErrors === 'object') {
@@ -70,33 +85,35 @@ function TelaCadastroProjeto() {
     });
   };
 
-  if (carregandoPerfil) {
-    return <div className="bg-[#F7F7F8] min-h-screen p-8 text-center text-[#6B7280]">Verificando permissões...</div>;
-  }
+  if (carregandoPerfil) return null;
 
+  // Apenas GESTOR ou ADMINISTRADOR
   if (usuario && tipoUsuario !== 'GESTOR' && tipoUsuario !== 'ADMINISTRADOR') {
-    return (
-      <div className="bg-[#F7F7F8] min-h-screen p-8 flex flex-col items-center justify-center">
-        <div className="bg-red-50 text-red-600 p-6 rounded-lg border border-red-200 max-w-md w-full text-center shadow-sm">
-          <strong>Acesso Negado:</strong> Apenas Gestores e Administradores podem cadastrar novos projetos.
+    return createPortal(
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto" onClick={onClose}>
+        <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 text-center" onClick={e => e.stopPropagation()}>
+          <div className="bg-red-50 text-red-600 p-4 rounded-lg border border-red-200 mb-4">
+            <strong>Acesso Negado:</strong> Apenas Gestores e Administradores podem cadastrar novos projetos.
+          </div>
+          <button onClick={onClose} className="bg-white border border-[#E5E7EB] text-[#0A0A0A] rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors font-medium">
+            Fechar
+          </button>
         </div>
-        <button onClick={() => navigate('/projetos')} className="mt-6 bg-white border border-[#E5E7EB] text-[#0A0A0A] rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors font-medium">
-          Voltar para Meus Projetos
-        </button>
-      </div>
+      </div>,
+      document.body
     );
   }
 
-  return (
-    <div className="bg-[#F7F7F8] min-h-screen p-8 flex items-center justify-center">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 overflow-y-auto" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl relative" onClick={e => e.stopPropagation()}>
         <div className="p-6 border-b border-[#E5E7EB] flex justify-between items-start">
           <div>
             <h2 className="text-xl font-bold text-[#0A0A0A] m-0">Criar Novo Projeto</h2>
             <p className="text-sm text-[#6B7280] m-0 mt-1">Preencha as informações do projeto</p>
           </div>
           <button 
-            onClick={() => navigate('/projetos')}
+            onClick={onClose}
             className="text-[#6B7280] hover:bg-gray-100 hover:text-[#0A0A0A] p-2 rounded-lg transition-colors"
             type="button"
           >
@@ -105,9 +122,9 @@ function TelaCadastroProjeto() {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-6">
-          {error && (
+          {formError && (
             <div className="bg-red-50 text-red-600 p-4 rounded-lg border border-red-200 text-sm">
-              {error}
+              {formError}
             </div>
           )}
 
@@ -168,7 +185,7 @@ function TelaCadastroProjeto() {
           <div className="flex justify-end gap-3 mt-4 pt-6 border-t border-[#E5E7EB]">
             <button
               type="button"
-              onClick={() => navigate('/projetos')}
+              onClick={onClose}
               disabled={loading}
               className="bg-white border border-[#E5E7EB] text-[#0A0A0A] font-medium rounded-lg px-5 py-2.5 hover:bg-gray-50 transition-colors text-sm"
             >
@@ -184,8 +201,7 @@ function TelaCadastroProjeto() {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
-
-export default TelaCadastroProjeto;

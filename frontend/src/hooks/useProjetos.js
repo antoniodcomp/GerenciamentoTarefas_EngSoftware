@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getProjects, createProject } from '../services/projectService';
+import { getProjects, createProject, updateProject } from '../services/projectService';
 
 export const useProjetos = () => {
   return useQuery({
@@ -15,6 +15,18 @@ export const useCreateProjeto = () => {
     mutationFn: createProject,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projetos'] });
+    },
+  });
+};
+
+export const useUpdateProjeto = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ projectId, data }) => updateProject(projectId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['projetos'] });
+      queryClient.invalidateQueries({ queryKey: ['projectDashboard'] });
     },
   });
 };

@@ -48,12 +48,13 @@ class ProjetoSerializer(serializers.ModelSerializer):
 
 class TarefaResumoSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='nome', read_only=True)
+    description = serializers.CharField(source='descricao', read_only=True)
     status = serializers.CharField(read_only=True)
     deadline = serializers.DateTimeField(source='data_fim', read_only=True)
     
     class Meta:
         model = Tarefa
-        fields = ['id', 'name', 'status', 'deadline']
+        fields = ['id', 'name', 'description', 'status', 'deadline']
 
 class TarefaCreateSerializer(serializers.ModelSerializer):
         name = serializers.CharField(source='nome')
@@ -61,11 +62,12 @@ class TarefaCreateSerializer(serializers.ModelSerializer):
         startline = serializers.DateTimeField(source='data_inicio', required=False, allow_null=True)
         deadline = serializers.DateTimeField(source='data_fim')
         project = serializers.PrimaryKeyRelatedField(queryset=Projeto.objects.all(), source='projeto')
+        participantes = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), many=True, required=False)
         status = serializers.CharField(read_only=True)
 
         class Meta:
             model = Tarefa
-            fields = ['id', 'name', 'description', 'startline', 'deadline', 'project', 'status']
+            fields = ['id', 'name', 'description', 'startline', 'deadline', 'project', 'participantes', 'status']
 
         def validate_name(self, value):
             if not value or value.strip() == "":
@@ -221,6 +223,9 @@ class ProjetoDashboardSerializer(serializers.ModelSerializer):
     
     # Lista de TODAS as tarefas vinculadas ao projeto
     all_tasks = TarefaResumoSerializer(source='tarefas', many=True, read_only=True)
+    
+    # Detalhes dos participantes
+    participantes = serializers.SerializerMethodField()
 
     class Meta:
         model = Projeto
@@ -228,7 +233,18 @@ class ProjetoDashboardSerializer(serializers.ModelSerializer):
             'id', 'name', 'description', 'startline', 'deadline', 
             'total_tasks', 'pending_tasks', 'in_progress_tasks', 
             'completed_tasks', 'progress_percentage', 'delayed_tasks',
-            'all_tasks'
+            'all_tasks', 'participantes'
+        ]
+
+    def get_participantes(self, obj):
+        return [
+            {
+                'id': u.id, 
+                'name': u.nome, 
+                'email': u.email, 
+                'role': u.tipo,
+                'professional_role': u.cargo_profissional
+            } for u in obj.participantes.all()
         ]
 
 
