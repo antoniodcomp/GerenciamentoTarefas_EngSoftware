@@ -1,22 +1,21 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { register } from '../services/authService';
+import { useRegistro } from '../hooks/useAuth';
 
 function TelaCadastroUsuario() {
   const [nome, setNome]   = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-  const [erro, setErro]   = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
 
   const navigate = useNavigate();
+  const registroMutation = useRegistro();
 
-  const handleSubmit = async (e) => {
-    setErro('');
+  const handleSubmit = (e) => {
     e.preventDefault();
     
     if (senha.length < 8) {
-        alert('A senha deve conter pelo menos 6 caracteres!');
+        alert('A senha deve conter pelo menos 8 caracteres!');
         return;
     }
 
@@ -25,30 +24,29 @@ function TelaCadastroUsuario() {
       return;
     }
 
-    try {
-      const response = await register({ email: email, 
-                                        name: nome, 
-                                        professional_role: 'desenvolvedor',
-                                         password: senha });
-      navigate('/login');    
-      alert(`Usuário ${nome} cadastrado com sucesso!`);
-    } catch (error) {
-      console.error('Erro de registro:', error);
-      if (error.response && error.response.data) {
-        // Concatena as mensagens de erro retornadas pela API (ex: e-mail já cadastrado)
-        const mensagens = Object.entries(error.response.data)
-          .map(([campo, erros]) => {
-            const mensagemErro = Array.isArray(erros) ? erros.join(', ') : String(erros);
-            return `${campo}: ${mensagemErro}`;
-          })
-          .join('\n');
-        setErro(mensagens);
-        alert(`Erro no cadastro:\n${mensagens}`);
-      } else {
-        setErro('Não foi possível conectar ao servidor. Tente novamente.');
+    registroMutation.mutate(
+      { email: email, name: nome, professional_role: 'desenvolvedor', password: senha },
+      {
+        onSuccess: () => {
+          navigate('/login');    
+          alert(`Usuário ${nome} cadastrado com sucesso!`);
+        },
+        onError: (error) => {
+          console.error('Erro de registro:', error);
+          if (error.response && error.response.data) {
+            const mensagens = Object.entries(error.response.data)
+              .map(([campo, erros]) => {
+                const mensagemErro = Array.isArray(erros) ? erros.join(', ') : String(erros);
+                return `${campo}: ${mensagemErro}`;
+              })
+              .join('\n');
+            alert(`Erro no cadastro:\n${mensagens}`);
+          } else {
+            alert('Não foi possível conectar ao servidor. Tente novamente.');
+          }
+        }
       }
-
-    }
+    );
 
     console.log('Dados de Cadastro:', { nome, email, senha });
   };

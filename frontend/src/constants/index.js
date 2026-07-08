@@ -1,0 +1,11 @@
+export const TipoUsuario = {
+  ADMINISTRADOR: 'ADMINISTRADOR',
+  GESTOR: 'GESTOR',
+  COMUM: 'COMUM'
+};
+
+export const Status = {
+  PENDENTE: 'PENDENTE',
+  EM_ANDAMENTO: 'EM_ANDAMENTO',
+  CONCLUIDA: 'CONCLUIDA'
+};

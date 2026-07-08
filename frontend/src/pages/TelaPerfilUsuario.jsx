@@ -1,38 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getPerfil, alterarSenha, getUsuarios, atualizarTipoUsuario, atualizarPerfil } from '../services/authService';
+import { usePerfil, useUsuarios, useUpdatePerfil, useAlterarSenha, useAtualizarTipoUsuario } from '../hooks/usePerfil';
 
 function TelaPerfilUsuario() {
   const navigate = useNavigate();
   const [abaAtiva, setAbaAtiva] = useState('informacoes');
-  const [usuario, setUsuario] = useState(null);
-  const [usuarios, setUsuarios] = useState([]);
   const [senhaAtual, setSenhaAtual] = useState('');
   const [novaSenha, setNovaSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
   const [mensagem, setMensagem] = useState('');
   const [erro, setErro] = useState('');
-  const [loadingUsuarios, setLoadingUsuarios] = useState(false);
   const [nomeEdit, setNomeEdit] = useState('');
   const [cargoEdit, setCargoEdit] = useState('');
+
+  const { data: usuario, isLoading: isLoadingPerfil, isError: isErrorPerfil } = usePerfil();
+  
+  const podeGerenciarUsuarios = usuario?.role === 'ADMINISTRADOR' || usuario?.role === 'GESTOR';
+  
+  const { data: usuarios = [], isLoading: loadingUsuarios } = useUsuarios(
+    abaAtiva === 'gerenciar' && podeGerenciarUsuarios
+  );
+
+  const updatePerfil = useUpdatePerfil();
+  const updateSenha = useAlterarSenha();
+  const updateTipoUsuario = useAtualizarTipoUsuario();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) { navigate('/login'); return; }
-    getPerfil()
-      .then(data => setUsuario(data))
-      .catch(() => navigate('/login'));
   }, [navigate]);
 
   useEffect(() => {
-    if (abaAtiva === 'gerenciar' && usuario?.tipo !== 'COMUM') {
-      setLoadingUsuarios(true);
-      getUsuarios()
-        .then(data => setUsuarios(data))
-        .catch(() => setErro('Erro ao carregar usuários.'))
-        .finally(() => setLoadingUsuarios(false));
+    if (isErrorPerfil) {
+      navigate('/login');
     }
-  }, [abaAtiva, usuario]);
+  }, [isErrorPerfil, navigate]);
 
   useEffect(() => {
     if (usuario) {
@@ -44,13 +46,14 @@ function TelaPerfilUsuario() {
   const handleSalvarPerfil = async () => {
     setMensagem(''); setErro('');
     if (!nomeEdit.trim()) { setErro('O nome não pode estar vazio.'); return; }
-    try {
-      const atualizado = await atualizarPerfil({ name: nomeEdit, professional_role: cargoEdit });
-      setUsuario(prev => ({ ...prev, name: atualizado.name, professional_role: atualizado.professional_role }));
-      setMensagem('Perfil atualizado com sucesso!');
-    } catch (e) {
-      setErro(e.response?.data?.error || 'Erro ao atualizar perfil.');
+    updatePerfil.mutate({ name: nomeEdit, professional_role: cargoEdit }, {
+      onSuccess: () => {
+        setMensagem('Perfil atualizado com sucesso!');
+      },
+      onError: (e) => {
+        setErro(e.response?.data?.error || 'Erro ao atualizar perfil.');
       }
+    });
   };
 
   const handleAlterarSenha = async () => {
@@ -61,24 +64,27 @@ function TelaPerfilUsuario() {
     if (novaSenha !== confirmarSenha) {
       setErro('As senhas não conferem.'); return;
     }
-    try {
-      await alterarSenha({ current_password: senhaAtual, new_password: novaSenha, confirm_password: confirmarSenha });
-      setMensagem('Senha alterada com sucesso!');
-      setSenhaAtual(''); setNovaSenha(''); setConfirmarSenha('');
-    } catch (e) {
-      setErro(e.response?.data?.error || 'Erro ao alterar senha.');
-    }
+    updateSenha.mutate({ current_password: senhaAtual, new_password: novaSenha, confirm_password: confirmarSenha }, {
+      onSuccess: () => {
+        setMensagem('Senha alterada com sucesso!');
+        setSenhaAtual(''); setNovaSenha(''); setConfirmarSenha('');
+      },
+      onError: (e) => {
+        setErro(e.response?.data?.error || 'Erro ao alterar senha.');
+      }
+    });
   };
 
   const handleAtualizarTipo = async (userId, novoTipo) => {
     setMensagem(''); setErro('');
-    try {
-      await atualizarTipoUsuario(userId, novoTipo);
-      setUsuarios(prev => prev.map(u => u.id === userId ? { ...u, role: novoTipo } : u));
-      setMensagem('Tipo de usuário atualizado com sucesso!');
-    } catch (e) {
-      setErro(e.response?.data?.error || 'Erro ao atualizar tipo.');
-    }
+    updateTipoUsuario.mutate({ userId, novoTipo }, {
+      onSuccess: () => {
+        setMensagem('Tipo de usuário atualizado com sucesso!');
+      },
+      onError: (e) => {
+        setErro(e.response?.data?.error || 'Erro ao atualizar tipo.');
+      }
+    });
   };
 
   const getTipoBadgeStyle = (tipo) => {
@@ -104,9 +110,9 @@ function TelaPerfilUsuario() {
     return [];
   };
 
+  if (isLoadingPerfil) return <div style={styles.container}>Carregando...</div>;
   if (!usuario) return null;
 
-  const podeGerenciarUsuarios = usuario.role === 'ADMINISTRADOR' || usuario.role === 'GESTOR';
   const badgeStyle = getTipoBadgeStyle(usuario.role);
 
   return (

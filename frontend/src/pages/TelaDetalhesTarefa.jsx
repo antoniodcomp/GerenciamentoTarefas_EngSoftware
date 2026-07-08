@@ -1,54 +1,132 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getTaskDetails, createSubtask, uploadTaskAttachment, createTaskComment, updateTaskStatus, updateSubtaskStatus } from '../services/taskService';
+import { 
+  useTaskDetails, 
+  useCreateSubtask, 
+  useUploadTaskAttachment, 
+  useCreateTaskComment, 
+  useUpdateTaskStatus, 
+  useUpdateSubtaskStatus 
+} from '../hooks/useTarefas';
+
+const formatDate = (dateString) => {
+  if (!dateString) return '-';
+  const date = new Date(dateString);
+  const utcDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+  return utcDate.toLocaleDateString('pt-BR');
+};
+
+const getTaskBadgeStyle = (status) => {
+  let bgColor = '#3b82f6';
+  if (status === 'PENDENTE') bgColor = '#f59e0b';
+  if (status === 'CONCLUIDA') bgColor = '#10b981';
+  
+  return {
+    fontSize: '12px',
+    padding: '6px 12px',
+    borderRadius: '16px',
+    backgroundColor: bgColor,
+    color: '#fff',
+    fontWeight: 'bold',
+    display: 'inline-block',
+    marginTop: '10px'
+  };
+};
+
+const SubtaskList = ({ subtasks, onStatusChange }) => {
+  if (!subtasks || subtasks.length === 0) {
+    return <p style={{ color: 'var(--text)', fontStyle: 'italic' }}>Nenhuma subtarefa cadastrada.</p>;
+  }
+  return (
+    <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+      {subtasks.map(subtask => (
+        <li key={subtask.id} style={{ padding: '15px', border: '1px solid var(--border)', borderRadius: '8px', marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h4 style={{ margin: '0 0 5px 0', color: 'var(--text-h)' }}>{subtask.name}</h4>
+            <div style={{ fontSize: '14px', color: 'var(--text)' }}>Prazo: {formatDate(subtask.deadline)}</div>
+          </div>
+          <select 
+            value={subtask.status} 
+            onChange={(e) => onStatusChange(subtask.id, e.target.value)}
+            style={{ ...getTaskBadgeStyle(subtask.status), border: 'none', cursor: 'pointer', outline: 'none' }}
+          >
+            <option value="PENDENTE">PENDENTE</option>
+            <option value="EM_ANDAMENTO">EM ANDAMENTO</option>
+            <option value="CONCLUIDA">CONCLUÍDA</option>
+          </select>
+        </li>
+      ))}
+    </ul>
+  );
+};
+
+const AttachmentList = ({ files }) => {
+  if (!files || files.length === 0) {
+    return <p style={{ color: 'var(--text)', fontStyle: 'italic', marginBottom: '20px' }}>Nenhum arquivo anexado a esta tarefa.</p>;
+  }
+  return (
+    <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+      {files.map(anexo => (
+        <li key={anexo.id} style={{ padding: '10px 15px', border: '1px solid var(--border)', borderRadius: '8px', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <a href={`http://localhost:8000${anexo.file_path}`} target="_blank" rel="noreferrer" style={{ color: '#3b82f6', textDecoration: 'none', fontWeight: 'bold' }}>
+              {anexo.file_name}
+            </a>
+            <div style={{ fontSize: '12px', color: 'var(--text)' }}>Enviado por: {anexo.user_name || 'Usuário'}</div>
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+};
+
+const CommentList = ({ comments }) => {
+  if (!comments || comments.length === 0) {
+    return <p style={{ color: 'var(--text)', fontStyle: 'italic', marginBottom: '20px' }}>Nenhum comentário nesta tarefa.</p>;
+  }
+  return (
+    <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+      {comments.map(comentario => (
+        <li key={comentario.id} style={{ padding: '15px', border: '1px solid var(--border)', borderRadius: '8px', marginBottom: '10px', backgroundColor: 'var(--bg)' }}>
+          <div style={{ marginBottom: '8px', fontWeight: 'bold', color: 'var(--text-h)' }}>
+            {comentario.user_name || 'Usuário'}
+            <span style={{ fontWeight: 'normal', fontSize: '12px', color: 'var(--text)', marginLeft: '10px' }}>
+              {new Date(comentario.date).toLocaleString('pt-BR')}
+            </span>
+          </div>
+          <div style={{ color: 'var(--text)', lineHeight: '1.5' }}>
+            {comentario.text}
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+};
 
 function TelaDetalhesTarefa() {
   const { projectId, taskId } = useParams();
   const navigate = useNavigate();
-  const [task, setTask] = useState(null);
-  const [loading, setLoading] = useState(true);
+
+  const { data: task, isLoading, isError } = useTaskDetails(taskId);
+  const { mutateAsync: createSubtask, isPending: submittingSubtask } = useCreateSubtask();
+  const { mutateAsync: uploadAttachment, isPending: uploading } = useUploadTaskAttachment();
+  const { mutateAsync: createComment, isPending: commenting } = useCreateTaskComment();
+  const { mutate: updateTaskStatus } = useUpdateTaskStatus();
+  const { mutate: updateSubtaskStatus } = useUpdateSubtaskStatus();
 
   const [showSubtaskForm, setShowSubtaskForm] = useState(false);
   const [newSubtask, setNewSubtask] = useState({ name: '', description: '', deadline: '' });
-  const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   const [selectedFile, setSelectedFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
 
   const [newComment, setNewComment] = useState('');
-  const [commenting, setCommenting] = useState(false);
   const [commentError, setCommentError] = useState('');
-
-  useEffect(() => {
-    const fetchTask = async () => {
-      try {
-        const data = await getTaskDetails(taskId);
-        setTask(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTask();
-  }, [taskId]);
-
-  const fetchTaskAgain = async () => {
-    try {
-      const data = await getTaskDetails(taskId);
-      setTask(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   const handleCreateSubtask = async (e) => {
     e.preventDefault();
-    setSubmitting(true);
     setErrorMsg('');
-
     try {
       await createSubtask({
         name: newSubtask.name,
@@ -58,16 +136,12 @@ function TelaDetalhesTarefa() {
       });
       setShowSubtaskForm(false);
       setNewSubtask({ name: '', description: '', deadline: '' });
-      fetchTaskAgain(); // Refresh task data to get new subtasks
     } catch (error) {
-      console.error(error);
       if (error.response && error.response.data) {
         setErrorMsg(Object.values(error.response.data).flat().join(', '));
       } else {
         setErrorMsg('Erro ao criar subtarefa. Verifique os dados e tente novamente.');
       }
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -75,7 +149,6 @@ function TelaDetalhesTarefa() {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validação de Tamanho (RF23 / 5MB)
     if (file.size > 5 * 1024 * 1024) {
       setUploadError('O arquivo selecionado excede o limite de 5MB permitido.');
       setSelectedFile(null);
@@ -83,7 +156,6 @@ function TelaDetalhesTarefa() {
       return;
     }
 
-    // Validação de Extensão
     const allowedExtensions = ['pdf', 'jpg', 'jpeg', 'png', 'txt', 'doc', 'docx'];
     const ext = file.name.split('.').pop().toLowerCase();
     if (!allowedExtensions.includes(ext)) {
@@ -100,8 +172,6 @@ function TelaDetalhesTarefa() {
   const handleFileUpload = async (e) => {
     e.preventDefault();
     if (!selectedFile) return;
-
-    setUploading(true);
     setUploadError('');
 
     const formData = new FormData();
@@ -110,101 +180,55 @@ function TelaDetalhesTarefa() {
     formData.append('task', taskId);
 
     try {
-      await uploadTaskAttachment(formData);
+      await uploadAttachment(formData);
       setSelectedFile(null);
-      
-      // Reseta o input visualmente procurando ele no DOM (opcional)
       const fileInput = document.getElementById('file-upload-input');
       if (fileInput) fileInput.value = '';
-
-      fetchTaskAgain();
     } catch (error) {
-      console.error(error);
       if (error.response && error.response.data) {
          const errors = Object.values(error.response.data).flat();
          setUploadError(errors.join(', '));
       } else {
          setUploadError('Erro inesperado ao anexar o arquivo. Tente novamente.');
       }
-    } finally {
-      setUploading(false);
     }
   };
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
-
-    setCommenting(true);
     setCommentError('');
 
     try {
-      await createTaskComment({
+      await createComment({
         text: newComment,
         task: taskId
       });
       setNewComment('');
-      fetchTaskAgain();
     } catch (error) {
-      console.error(error);
       if (error.response && error.response.data) {
          const errors = Object.values(error.response.data).flat();
          setCommentError(errors.join(', '));
       } else {
          setCommentError('Erro ao enviar o comentário. Tente novamente.');
       }
-    } finally {
-      setCommenting(false);
     }
   };
 
-  const handleTaskStatusChange = async (e) => {
-    const newStatus = e.target.value;
-    try {
-      await updateTaskStatus(taskId, newStatus);
-      fetchTaskAgain();
-    } catch (err) {
-      console.error('Error updating task status:', err);
-      alert('Erro ao atualizar status da tarefa');
-    }
+  const handleTaskStatusChange = (e) => {
+    updateTaskStatus({ taskId, newStatus: e.target.value }, {
+      onError: () => alert('Erro ao atualizar status da tarefa')
+    });
   };
 
-  const handleSubtaskStatusChange = async (subtaskId, newStatus) => {
-    try {
-      await updateSubtaskStatus(subtaskId, newStatus);
-      fetchTaskAgain();
-    } catch (err) {
-      console.error('Error updating subtask status:', err);
-      alert('Erro ao atualizar status da subtarefa');
-    }
+  const handleSubtaskStatusChange = (subtaskId, newStatus) => {
+    updateSubtaskStatus({ subtaskId, newStatus }, {
+      onError: () => alert('Erro ao atualizar status da subtarefa')
+    });
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    const utcDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
-    return utcDate.toLocaleDateString('pt-BR');
-  };
-
-  const getTaskBadgeStyle = (status) => {
-    let bgColor = '#3b82f6';
-    if (status === 'PENDENTE') bgColor = '#f59e0b';
-    if (status === 'CONCLUIDA') bgColor = '#10b981';
-    
-    return {
-      fontSize: '12px',
-      padding: '6px 12px',
-      borderRadius: '16px',
-      backgroundColor: bgColor,
-      color: '#fff',
-      fontWeight: 'bold',
-      display: 'inline-block',
-      marginTop: '10px'
-    };
-  };
-
-  if (loading) return <div style={{ padding: '50px', textAlign: 'center' }}>Carregando Tarefa...</div>;
-  if (!task) return <div style={{ padding: '50px', textAlign: 'center' }}>Erro ao carregar a tarefa.</div>;
+  if (isLoading) return <div style={{ padding: '50px', textAlign: 'center' }}>Carregando Tarefa...</div>;
+  if (isError || !task) return <div style={{ padding: '50px', textAlign: 'center' }}>Erro ao carregar a tarefa.</div>;
 
   return (
     <div style={{ padding: '40px 20px', maxWidth: '800px', margin: '0 auto', textAlign: 'left' }}>
@@ -288,39 +312,17 @@ function TelaDetalhesTarefa() {
                 </div>
                 <button 
                   type="submit" 
-                  disabled={submitting}
-                  style={{ padding: '10px 20px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '4px', cursor: submitting ? 'not-allowed' : 'pointer' }}
+                  disabled={submittingSubtask}
+                  style={{ padding: '10px 20px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '4px', cursor: submittingSubtask ? 'not-allowed' : 'pointer' }}
                 >
-                  {submitting ? 'Salvando...' : 'Salvar Subtarefa'}
+                  {submittingSubtask ? 'Salvando...' : 'Salvar Subtarefa'}
                 </button>
               </form>
             </div>
           )}
 
           <div style={{ marginTop: '20px' }}>
-            {task.subtasks && task.subtasks.length > 0 ? (
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {task.subtasks.map(subtask => (
-                  <li key={subtask.id} style={{ padding: '15px', border: '1px solid var(--border)', borderRadius: '8px', marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <h4 style={{ margin: '0 0 5px 0', color: 'var(--text-h)' }}>{subtask.name}</h4>
-                      <div style={{ fontSize: '14px', color: 'var(--text)' }}>Prazo: {formatDate(subtask.deadline)}</div>
-                    </div>
-                    <select 
-                      value={subtask.status} 
-                      onChange={(e) => handleSubtaskStatusChange(subtask.id, e.target.value)}
-                      style={{ ...getTaskBadgeStyle(subtask.status), border: 'none', cursor: 'pointer', outline: 'none' }}
-                    >
-                      <option value="PENDENTE">PENDENTE</option>
-                      <option value="EM_ANDAMENTO">EM ANDAMENTO</option>
-                      <option value="CONCLUIDA">CONCLUÍDA</option>
-                    </select>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p style={{ color: 'var(--text)', fontStyle: 'italic' }}>Nenhuma subtarefa cadastrada.</p>
-            )}
+            <SubtaskList subtasks={task.subtasks} onStatusChange={handleSubtaskStatusChange} />
           </div>
         </div>
 
@@ -330,27 +332,10 @@ function TelaDetalhesTarefa() {
             <h3 style={{ color: 'var(--text-h)', margin: 0 }}>Anexos</h3>
           </div>
 
-          {/* Lista de Anexos */}
           <div style={{ marginBottom: '20px' }}>
-            {task.files && task.files.length > 0 ? (
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {task.files.map(anexo => (
-                  <li key={anexo.id} style={{ padding: '10px 15px', border: '1px solid var(--border)', borderRadius: '8px', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <a href={`http://localhost:8000${anexo.file_path}`} target="_blank" rel="noreferrer" style={{ color: '#3b82f6', textDecoration: 'none', fontWeight: 'bold' }}>
-                        {anexo.file_name}
-                      </a>
-                      <div style={{ fontSize: '12px', color: 'var(--text)' }}>Enviado por: {anexo.user_name || 'Usuário'}</div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p style={{ color: 'var(--text)', fontStyle: 'italic', marginBottom: '20px' }}>Nenhum arquivo anexado a esta tarefa.</p>
-            )}
+            <AttachmentList files={task.files} />
           </div>
 
-          {/* Formulário de Upload */}
           <div style={{ padding: '20px', backgroundColor: 'var(--bg)', border: '1px dashed var(--border)', borderRadius: '8px' }}>
             <h4 style={{ margin: '0 0 15px 0', color: 'var(--text-h)' }}>Adicionar Novo Anexo</h4>
             {uploadError && <div style={{ color: '#ef4444', marginBottom: '15px', padding: '10px', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: '4px' }}>{uploadError}</div>}
@@ -379,30 +364,10 @@ function TelaDetalhesTarefa() {
             <h3 style={{ color: 'var(--text-h)', margin: 0 }}>Comentários</h3>
           </div>
 
-          {/* Lista de Comentários */}
           <div style={{ marginBottom: '20px' }}>
-            {task.comments && task.comments.length > 0 ? (
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {task.comments.map(comentario => (
-                  <li key={comentario.id} style={{ padding: '15px', border: '1px solid var(--border)', borderRadius: '8px', marginBottom: '10px', backgroundColor: 'var(--bg)' }}>
-                    <div style={{ marginBottom: '8px', fontWeight: 'bold', color: 'var(--text-h)' }}>
-                      {comentario.user_name || 'Usuário'}
-                      <span style={{ fontWeight: 'normal', fontSize: '12px', color: 'var(--text)', marginLeft: '10px' }}>
-                        {new Date(comentario.date).toLocaleString('pt-BR')}
-                      </span>
-                    </div>
-                    <div style={{ color: 'var(--text)', lineHeight: '1.5' }}>
-                      {comentario.text}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p style={{ color: 'var(--text)', fontStyle: 'italic', marginBottom: '20px' }}>Nenhum comentário nesta tarefa.</p>
-            )}
+            <CommentList comments={task.comments} />
           </div>
 
-          {/* Formulário de Novo Comentário */}
           <div style={{ padding: '20px', backgroundColor: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px' }}>
             <h4 style={{ margin: '0 0 15px 0', color: 'var(--text-h)' }}>Adicionar Comentário</h4>
             {commentError && <div style={{ color: '#ef4444', marginBottom: '15px', padding: '10px', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: '4px' }}>{commentError}</div>}

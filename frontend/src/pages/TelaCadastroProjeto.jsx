@@ -1,69 +1,70 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createProject } from '../services/projectService'; // Corrigido para importar de authService.js
+import { useCreateProjeto } from '../hooks/useProjetos';
 
 function TelaCadastroProjeto() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [deadline, setDeadline] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [formError, setFormError] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const createProjetoMutation = useCreateProjeto();
+  const loading = createProjetoMutation.isPending;
+  const error = formError;
+
+  const handleSubmit = (e) => {
     e.preventDefault();
 
     // Validações básicas no frontend
     if (!name.trim()) {
-      setError('O nome do projeto é obrigatório.');
+      setFormError('O nome do projeto é obrigatório.');
       return;
     }
     if (!deadline) {
-      setError('O prazo final do projeto é obrigatório.');
+      setFormError('O prazo final do projeto é obrigatório.');
       return;
     }
 
     const todayStr = new Date().toISOString().split('T')[0];
     if (deadline < todayStr) {
-      setError('O prazo final não pode ser uma data no passado.');
+      setFormError('O prazo final não pode ser uma data no passado.');
       return;
     }
 
-    try {
-      setLoading(true);
-      setError('');
+    setFormError('');
 
-      const projectData = {
-        name: name.trim(),
-        description: description.trim() || null,
-        deadline,
-      };
+    const projectData = {
+      name: name.trim(),
+      description: description.trim() || null,
+      deadline,
+    };
 
-      // Dispara a requisição POST para a API do Django
-      await createProject(projectData);
-      
-      // Redireciona de volta para a listagem
-      navigate('/projetos');
-    } catch (err) {
-      console.error(err);
-      
-      // Exibe erros estruturados vindos do Django REST Framework
-      if (err.response && err.response.data) {
-        const backendErrors = err.response.data;
-        if (typeof backendErrors === 'object') {
-          const messages = Object.entries(backendErrors)
-            .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(' ') : msgs}`)
-            .join(' | ');
-          setError(messages || 'Erro ao cadastrar o projeto. Verifique os dados.');
+    // Dispara a mutation para criar o projeto
+    createProjetoMutation.mutate(projectData, {
+      onSuccess: () => {
+        // Redireciona de volta para a listagem
+        navigate('/projetos');
+      },
+      onError: (err) => {
+        console.error(err);
+        
+        // Exibe erros estruturados vindos do Django REST Framework
+        if (err.response && err.response.data) {
+          const backendErrors = err.response.data;
+          if (typeof backendErrors === 'object') {
+            const messages = Object.entries(backendErrors)
+              .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(' ') : msgs}`)
+              .join(' | ');
+            setFormError(messages || 'Erro ao cadastrar o projeto. Verifique os dados.');
+          } else {
+            setFormError('Ocorreu um erro no servidor. Tente novamente mais tarde.');
+          }
         } else {
-          setError('Ocorreu um erro no servidor. Tente novamente mais tarde.');
+          setFormError('Não foi possível conectar ao servidor. Tente novamente.');
         }
-      } else {
-        setError('Não foi possível conectar ao servidor. Tente novamente.');
       }
-    } finally {
-      setLoading(false);
-    }
+    });
   };
 
   return (

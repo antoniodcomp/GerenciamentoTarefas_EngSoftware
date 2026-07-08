@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { reconfirmarSenha } from '../services/authService';
+import { useReconfirmarSenha } from '../hooks/useAuth';
 
 function TelaReconfirmarSenha() {
   const location = useLocation();
@@ -10,38 +10,49 @@ function TelaReconfirmarSenha() {
   const [codigo, setCodigo] = useState('');
   const [novaSenha, setNovaSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
-  const [erro, setErro] = useState('');
-  const [sucesso, setSucesso] = useState('');
 
-  const handleSubmit = async (e) => {
+  const reconfirmarSenhaMutation = useReconfirmarSenha();
+
+  let erro = '';
+  if (reconfirmarSenhaMutation.isError) {
+    erro = reconfirmarSenhaMutation.error.response?.data?.error || 'Erro ao redefinir a senha.';
+  }
+
+  let sucesso = '';
+  if (reconfirmarSenhaMutation.isSuccess) {
+    sucesso = 'Senha redefinida com sucesso! Redirecionando...';
+  }
+
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setErro('');
-    setSucesso('');
 
     if (novaSenha.length < 8) {
-      setErro('A nova senha deve conter pelo menos 8 caracteres.');
+      alert('A nova senha deve conter pelo menos 8 caracteres.');
       return;
     }
 
     if (novaSenha !== confirmarSenha) {
-      setErro('As senhas não coincidem.');
+      alert('As senhas não coincidem.');
       return;
     }
 
-    try {
-      await reconfirmarSenha({
+    reconfirmarSenhaMutation.mutate(
+      {
         email,
         code: codigo,
         new_password: novaSenha,
-      });
-      setSucesso('Senha redefinida com sucesso! Redirecionando...');
-      setTimeout(() => {
-        navigate('/login');
-      }, 3000);
-    } catch (error) {
-      console.error('Erro na redefinição:', error);
-      setErro(error.response?.data?.error || 'Erro ao redefinir a senha.');
-    }
+      },
+      {
+        onSuccess: () => {
+          setTimeout(() => {
+            navigate('/login');
+          }, 3000);
+        },
+        onError: (error) => {
+          console.error('Erro na redefinição:', error);
+        }
+      }
+    );
   };
 
   return (
