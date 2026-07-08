@@ -11,7 +11,7 @@ function TelaProjetos() {
   const { data: projects = [], isPending: isLoading, isError } = useProjetos();
 
   const { data: usuario } = usePerfil();
-  const tipoUsuario = usuario?.tipo_usuario || usuario?.tipo;
+  const tipoUsuario = usuario?.role || usuario?.tipo;
   const podeAdicionar = tipoUsuario === 'GESTOR' || tipoUsuario === 'ADMINISTRADOR';
 
   // Filtra projetos em tempo real (busca pelo nome ou descrição)
