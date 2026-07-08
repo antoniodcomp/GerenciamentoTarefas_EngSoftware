@@ -52,132 +52,61 @@ function TelaCadastroUsuario() {
   };
 
   return (
-    <div style={styles.container}>
-      <header style={styles.topbar}>
-        <span style={styles.logoText}>Sistema de Gestão</span>
+    <div className="bg-gray-50 flex items-center justify-center min-h-screen fixed inset-0 z-[9999]">
+      <header className="absolute top-0 left-0 right-0 h-[60px] bg-white border-b border-gray-200 flex items-center px-6">
+        <span className="font-bold text-lg text-gray-900">Sistema de Gestão</span>
       </header>
 
-      <div style={styles.card}>
-        <h2 style={styles.title}>Cadastrar-se</h2>
-        <p style={styles.subtitle}>Cadastre-se para poder entrar no sistema</p>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 w-full max-w-md mt-10">
+        <h2 className="text-2xl font-bold text-gray-900 text-center mb-2">Cadastrar-se</h2>
+        <p className="text-sm text-gray-500 text-center mb-8">Cadastre-se para poder entrar no sistema</p>
         
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Nome Completo</label>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-slate-700">Nome Completo</label>
             <input 
               type="text" required placeholder="Seu nome" value={nome}
-              onChange={(e) => setNome(e.target.value)} style={styles.input}
+              onChange={(e) => setNome(e.target.value)} 
+              className="bg-gray-100 border-none rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-slate-900"
             />
           </div>
 
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>E-mail</label>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-slate-700">E-mail</label>
             <input 
               type="email" required placeholder="seuemail@dominio.com" value={email}
-              onChange={(e) => setEmail(e.target.value)} style={styles.input}
+              onChange={(e) => setEmail(e.target.value)} 
+              className="bg-gray-100 border-none rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-slate-900"
             />
           </div>
           
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Senha</label>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-slate-700">Senha</label>
             <input 
-              type="senha" required placeholder="••••••••" value={senha}
-              onChange={(e) => setSenha(e.target.value)} style={styles.input}
+              type="password" required placeholder="••••••••" value={senha}
+              onChange={(e) => setSenha(e.target.value)} 
+              className="bg-gray-100 border-none rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-slate-900"
             />
           </div>
 
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Confirmar Senha</label>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-slate-700">Confirmar Senha</label>
             <input 
-              type="senha" required placeholder="••••••••" value={confirmarSenha}
-              onChange={(e) => setConfirmarSenha(e.target.value)} style={styles.input}
+              type="password" required placeholder="••••••••" value={confirmarSenha}
+              onChange={(e) => setConfirmarSenha(e.target.value)} 
+              className="bg-gray-100 border-none rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-slate-900"
             />
           </div>
           
-          <button type="submit" style={styles.button}>Cadastrar</button>
+          <button type="submit" className="bg-slate-900 text-white rounded-md py-2 px-4 hover:bg-slate-800 transition-colors w-full mt-2 font-semibold">Cadastrar</button>
         </form>
         
-        <p style={styles.footer}>
-            Já tem uma conta? <Link to="/login" style={styles.link}>Faça Login</Link>
+        <p className="mt-7 text-center text-sm text-gray-500">
+            Já tem uma conta? <Link to="/login" className="text-blue-600 font-medium hover:underline">Faça Login</Link>
         </p>
       </div>
     </div>
   );
 }
-
-// Reaproveitando os mesmos estilos do login
-const styles = {
-  container: { 
-    display: 'flex', 
-    flexDirection: 'column',
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    height: '100vh', 
-    width: '100vw',
-    backgroundColor: '#f8fafc',
-    fontFamily: '"Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-  
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    zIndex: 9999
-  },
-  topbar: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '60px',
-    backgroundColor: '#ffffff',
-    borderBottom: '1px solid #e2e8f0',
-    display: 'flex',
-    alignItems: 'center',
-    paddingLeft: '24px',
-  },
-  logoText: {
-    fontWeight: 'bold',
-    fontSize: '18px',
-    color: '#0f172a'
-  },
-  card: { 
-    backgroundColor: '#ffffff', 
-    padding: '40px', 
-    borderRadius: '12px', // Bordas arredondadas do padrão do protótipo
-    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03)', // Sombra super leve
-    border: '1px solid #e2e8f0',
-    width: '100%', 
-    maxWidth: '420px',
-    marginTop: '40px'
-  },
-  title: { margin: '0 0 8px 0', textAlign: 'center', color: '#0f172a', fontWeight: '600', fontSize: '24px' },
-  subtitle: { margin: '0 0 32px 0', textAlign: 'center', color: '#64748b', fontSize: '14px', lineHeight: '1.5' },
-  form: { display: 'flex', flexDirection: 'column', gap: '20px' },
-  inputGroup: { display: 'flex', flexDirection: 'column', gap: '8px' },
-  label: { fontSize: '14px', fontWeight: '500', color: '#334155' },
-  input: { 
-    padding: '12px 16px', 
-    borderRadius: '8px', 
-    border: '1px solid #cbd5e1', 
-    fontSize: '15px',
-    backgroundColor: '#ffffff',
-    color: '#0f172a',
-    outline: 'none',
-    transition: 'border-color 0.2s'
-  },
-  button: { 
-    padding: '14px', 
-    backgroundColor: '#0f172a', // Tom escuro do menu do protótipo
-    color: '#ffffff', 
-    border: 'none', 
-    borderRadius: '8px', 
-    fontSize: '15px', 
-    fontWeight: '600', 
-    cursor: 'pointer', 
-    marginTop: '10px',
-    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
-  },
-  footer: { marginTop: '28px', textAlign: 'center', fontSize: '14px', color: '#64748b' },
-  link: { color: '#2563eb', textDecoration: 'none', fontWeight: '500' } // Azul das barras de progresso
-};
 
 export default TelaCadastroUsuario;

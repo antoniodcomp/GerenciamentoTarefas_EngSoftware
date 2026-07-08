@@ -8,6 +8,7 @@ import {
   useUpdateTaskStatus, 
   useUpdateSubtaskStatus 
 } from '../hooks/useTarefas';
+import { ArrowLeft, Plus, Paperclip, MessageSquare, Calendar, FileText, Upload, ChevronDown } from 'lucide-react';
 
 const formatDate = (dateString) => {
   if (!dateString) return '-';
@@ -16,44 +17,40 @@ const formatDate = (dateString) => {
   return utcDate.toLocaleDateString('pt-BR');
 };
 
-const getTaskBadgeStyle = (status) => {
-  let bgColor = '#3b82f6';
-  if (status === 'PENDENTE') bgColor = '#f59e0b';
-  if (status === 'CONCLUIDA') bgColor = '#10b981';
-  
-  return {
-    fontSize: '12px',
-    padding: '6px 12px',
-    borderRadius: '16px',
-    backgroundColor: bgColor,
-    color: '#fff',
-    fontWeight: 'bold',
-    display: 'inline-block',
-    marginTop: '10px'
-  };
+const getTaskBadgeClass = (status) => {
+  if (status === 'CONCLUIDA') return 'bg-emerald-100 text-emerald-800';
+  if (status === 'EM_ANDAMENTO') return 'bg-blue-100 text-blue-800';
+  return 'bg-amber-100 text-amber-800';
 };
 
 const SubtaskList = ({ subtasks, onStatusChange }) => {
   if (!subtasks || subtasks.length === 0) {
-    return <p style={{ color: 'var(--text)', fontStyle: 'italic' }}>Nenhuma subtarefa cadastrada.</p>;
+    return <p className="text-gray-500 text-sm italic mb-0">Nenhuma subtarefa cadastrada.</p>;
   }
   return (
-    <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+    <ul className="list-none p-0 m-0">
       {subtasks.map(subtask => (
-        <li key={subtask.id} style={{ padding: '15px', border: '1px solid var(--border)', borderRadius: '8px', marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <li key={subtask.id} className="bg-white border border-gray-200 rounded-lg p-4 mb-3 flex justify-between items-center">
           <div>
-            <h4 style={{ margin: '0 0 5px 0', color: 'var(--text-h)' }}>{subtask.name}</h4>
-            <div style={{ fontSize: '14px', color: 'var(--text)' }}>Prazo: {formatDate(subtask.deadline)}</div>
+            <h4 className="text-gray-900 font-bold text-base mb-1 m-0">{subtask.name}</h4>
+            <div className="text-sm text-gray-500 flex items-center gap-1">
+              <Calendar size={14} />
+              Prazo: {formatDate(subtask.deadline)}
+            </div>
           </div>
-          <select 
-            value={subtask.status} 
-            onChange={(e) => onStatusChange(subtask.id, e.target.value)}
-            style={{ ...getTaskBadgeStyle(subtask.status), border: 'none', cursor: 'pointer', outline: 'none' }}
-          >
-            <option value="PENDENTE">PENDENTE</option>
-            <option value="EM_ANDAMENTO">EM ANDAMENTO</option>
-            <option value="CONCLUIDA">CONCLUÍDA</option>
-          </select>
+          <div className="relative inline-block">
+            <select 
+              value={subtask.status} 
+              onChange={(e) => onStatusChange(subtask.id, e.target.value)}
+              className={`rounded-full pl-3 pr-7 py-0.5 text-xs font-semibold cursor-pointer border-none outline-none text-left appearance-none ${getTaskBadgeClass(subtask.status)}`}
+              style={{ WebkitAppearance: 'none', MozAppearance: 'none' }}
+            >
+              <option value="PENDENTE" className="text-gray-900 bg-white">PENDENTE</option>
+              <option value="EM_ANDAMENTO" className="text-gray-900 bg-white">EM ANDAMENTO</option>
+              <option value="CONCLUIDA" className="text-gray-900 bg-white">CONCLUÍDA</option>
+            </select>
+            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-current pointer-events-none opacity-70" />
+          </div>
         </li>
       ))}
     </ul>
@@ -62,17 +59,18 @@ const SubtaskList = ({ subtasks, onStatusChange }) => {
 
 const AttachmentList = ({ files }) => {
   if (!files || files.length === 0) {
-    return <p style={{ color: 'var(--text)', fontStyle: 'italic', marginBottom: '20px' }}>Nenhum arquivo anexado a esta tarefa.</p>;
+    return <p className="text-gray-500 text-sm italic mb-5">Nenhum arquivo anexado a esta tarefa.</p>;
   }
   return (
-    <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+    <ul className="list-none p-0 m-0 mb-4">
       {files.map(anexo => (
-        <li key={anexo.id} style={{ padding: '10px 15px', border: '1px solid var(--border)', borderRadius: '8px', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <li key={anexo.id} className="bg-white border border-gray-200 rounded-lg p-4 mb-3 flex justify-between items-center">
           <div>
-            <a href={`http://localhost:8000${anexo.file_path}`} target="_blank" rel="noreferrer" style={{ color: '#3b82f6', textDecoration: 'none', fontWeight: 'bold' }}>
+            <a href={`http://localhost:8000${anexo.file_path}`} target="_blank" rel="noreferrer" className="text-blue-600 font-bold hover:underline flex items-center gap-2 mb-1 text-sm">
+              <FileText size={16} />
               {anexo.file_name}
             </a>
-            <div style={{ fontSize: '12px', color: 'var(--text)' }}>Enviado por: {anexo.user_name || 'Usuário'}</div>
+            <div className="text-xs text-gray-500">Enviado por: {anexo.user_name || 'Usuário'}</div>
           </div>
         </li>
       ))}
@@ -82,19 +80,19 @@ const AttachmentList = ({ files }) => {
 
 const CommentList = ({ comments }) => {
   if (!comments || comments.length === 0) {
-    return <p style={{ color: 'var(--text)', fontStyle: 'italic', marginBottom: '20px' }}>Nenhum comentário nesta tarefa.</p>;
+    return <p className="text-gray-500 text-sm italic mb-5">Nenhum comentário nesta tarefa.</p>;
   }
   return (
-    <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+    <ul className="list-none p-0 m-0 mb-4">
       {comments.map(comentario => (
-        <li key={comentario.id} style={{ padding: '15px', border: '1px solid var(--border)', borderRadius: '8px', marginBottom: '10px', backgroundColor: 'var(--bg)' }}>
-          <div style={{ marginBottom: '8px', fontWeight: 'bold', color: 'var(--text-h)' }}>
+        <li key={comentario.id} className="bg-white border border-gray-200 rounded-lg p-4 mb-3">
+          <div className="mb-2 text-gray-900 font-bold text-sm flex items-center gap-2">
             {comentario.user_name || 'Usuário'}
-            <span style={{ fontWeight: 'normal', fontSize: '12px', color: 'var(--text)', marginLeft: '10px' }}>
+            <span className="font-normal text-xs text-gray-500">
               {new Date(comentario.date).toLocaleString('pt-BR')}
             </span>
           </div>
-          <div style={{ color: 'var(--text)', lineHeight: '1.5' }}>
+          <div className="text-gray-500 text-sm leading-relaxed whitespace-pre-wrap">
             {comentario.text}
           </div>
         </li>
@@ -227,167 +225,182 @@ function TelaDetalhesTarefa() {
     });
   };
 
-  if (isLoading) return <div style={{ padding: '50px', textAlign: 'center' }}>Carregando Tarefa...</div>;
-  if (isError || !task) return <div style={{ padding: '50px', textAlign: 'center' }}>Erro ao carregar a tarefa.</div>;
+  if (isLoading) return <div className="bg-gray-50 min-h-screen p-8 text-center text-gray-500 text-sm">Carregando Tarefa...</div>;
+  if (isError || !task) return <div className="bg-gray-50 min-h-screen p-8 text-center text-red-500 text-sm">Erro ao carregar a tarefa.</div>;
 
   return (
-    <div style={{ padding: '40px 20px', maxWidth: '800px', margin: '0 auto', textAlign: 'left' }}>
-      <button 
-        onClick={() => navigate(`/projetos/${projectId}/dashboard`)} 
-        style={{ padding: '8px 16px', backgroundColor: 'transparent', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: '6px', cursor: 'pointer', marginBottom: '20px' }}
-      >
-        ← Voltar ao Dashboard
-      </button>
-      
-      <div style={{ backgroundColor: 'var(--bg)', padding: '40px', borderRadius: '12px', border: '1px solid var(--border)', boxShadow: 'var(--shadow)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <h1 style={{ margin: '0 0 10px 0', color: 'var(--text-h)', fontSize: '32px' }}>{task.name}</h1>
-          <select 
-            value={task.status} 
-            onChange={handleTaskStatusChange}
-            style={{ ...getTaskBadgeStyle(task.status), border: 'none', cursor: 'pointer', outline: 'none' }}
-          >
-            <option value="PENDENTE">PENDENTE</option>
-            <option value="EM_ANDAMENTO">EM ANDAMENTO</option>
-            <option value="CONCLUIDA">CONCLUÍDA</option>
-          </select>
-        </div>
+    <div className="bg-gray-50 min-h-screen p-8">
+      <div className="max-w-4xl mx-auto text-left">
+        <button 
+          onClick={() => navigate(`/projetos/${projectId}/dashboard`)} 
+          className="flex items-center gap-2 px-4 py-2 mb-6 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors cursor-pointer"
+        >
+          <ArrowLeft size={16} />
+          Voltar ao Dashboard
+        </button>
         
-        <div style={{ marginTop: '40px' }}>
-          <h3 style={{ color: 'var(--text-h)', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>Descrição da Tarefa</h3>
-          <p style={{ color: 'var(--text)', lineHeight: '1.6', fontSize: '16px' }}>
-            {task.description || <i>Nenhuma descrição detalhada foi fornecida para esta tarefa.</i>}
-          </p>
-        </div>
-        
-        <div style={{ marginTop: '30px' }}>
-          <h3 style={{ color: 'var(--text-h)', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>Prazos e Informações</h3>
-          <p style={{ color: 'var(--text)' }}><strong>Prazo Final:</strong> {formatDate(task.deadline)}</p>
-        </div>
-
-        {/* --- Seção de Subtarefas --- */}
-        <div style={{ marginTop: '40px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>
-            <h3 style={{ color: 'var(--text-h)', margin: 0 }}>Subtarefas</h3>
-            <button 
-              onClick={() => setShowSubtaskForm(!showSubtaskForm)}
-              style={{ padding: '6px 12px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-            >
-              {showSubtaskForm ? 'Cancelar' : '+ Nova Subtarefa'}
-            </button>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+          <div className="flex justify-between items-start flex-wrap gap-4 mb-8">
+            <h1 className="text-gray-900 font-bold text-3xl m-0">{task.name}</h1>
+            <div className="relative inline-block">
+              <select 
+                value={task.status} 
+                onChange={handleTaskStatusChange}
+                className={`rounded-full pl-4 pr-8 py-1 text-sm font-semibold cursor-pointer border-none outline-none appearance-none ${getTaskBadgeClass(task.status)}`}
+                style={{ WebkitAppearance: 'none', MozAppearance: 'none' }}
+              >
+                <option value="PENDENTE" className="text-gray-900 bg-white">PENDENTE</option>
+                <option value="EM_ANDAMENTO" className="text-gray-900 bg-white">EM ANDAMENTO</option>
+                <option value="CONCLUIDA" className="text-gray-900 bg-white">CONCLUÍDA</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-current pointer-events-none opacity-70" />
+            </div>
+          </div>
+          
+          <div className="mb-8">
+            <h3 className="text-gray-900 font-bold text-lg border-b border-gray-200 pb-2 mb-4 m-0">Descrição da Tarefa</h3>
+            <p className="text-gray-500 text-sm leading-relaxed whitespace-pre-wrap m-0">
+              {task.description || <i className="text-gray-400">Nenhuma descrição detalhada foi fornecida para esta tarefa.</i>}
+            </p>
+          </div>
+          
+          <div className="mb-8">
+            <h3 className="text-gray-900 font-bold text-lg border-b border-gray-200 pb-2 mb-4 m-0">Prazos e Informações</h3>
+            <p className="text-gray-500 text-sm flex items-center gap-2 m-0">
+              <Calendar size={16} className="text-gray-400" />
+              <strong className="text-gray-900">Prazo Final:</strong> {formatDate(task.deadline)}
+            </p>
           </div>
 
-          {showSubtaskForm && (
-            <div style={{ marginTop: '20px', padding: '20px', backgroundColor: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px' }}>
-              <h4 style={{ margin: '0 0 15px 0', color: 'var(--text-h)' }}>Cadastrar Subtarefa</h4>
-              {errorMsg && <div style={{ color: '#ef4444', marginBottom: '15px' }}>{errorMsg}</div>}
-              <form onSubmit={handleCreateSubtask}>
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', color: 'var(--text)' }}>Título</label>
-                  <input 
-                    type="text" 
-                    value={newSubtask.name}
-                    onChange={(e) => setNewSubtask({...newSubtask, name: e.target.value})}
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--border)', backgroundColor: 'var(--bg)', color: 'var(--text)' }}
-                    required
-                  />
-                </div>
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', color: 'var(--text)' }}>Descrição</label>
-                  <textarea 
-                    value={newSubtask.description}
-                    onChange={(e) => setNewSubtask({...newSubtask, description: e.target.value})}
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--border)', backgroundColor: 'var(--bg)', color: 'var(--text)', minHeight: '60px' }}
-                  />
-                </div>
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', color: 'var(--text)' }}>Prazo Final</label>
-                  <input 
-                    type="datetime-local" 
-                    value={newSubtask.deadline}
-                    onChange={(e) => setNewSubtask({...newSubtask, deadline: e.target.value})}
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--border)', backgroundColor: 'var(--bg)', color: 'var(--text)' }}
-                    required
-                  />
-                </div>
+          {/* --- Seção de Subtarefas --- */}
+          <div className="mb-10">
+            <div className="flex justify-between items-center border-b border-gray-200 pb-2 mb-4">
+              <h3 className="text-gray-900 font-bold text-lg m-0 flex items-center gap-2">
+                Subtarefas
+              </h3>
+              <button 
+                onClick={() => setShowSubtaskForm(!showSubtaskForm)}
+                className="bg-slate-900 text-white rounded-md px-3 py-1.5 hover:bg-slate-800 text-xs font-medium flex items-center gap-1 cursor-pointer"
+              >
+                {showSubtaskForm ? 'Cancelar' : <><Plus size={14} /> Nova Subtarefa</>}
+              </button>
+            </div>
+
+            {showSubtaskForm && (
+              <div className="mb-6 p-5 bg-gray-50 border border-gray-200 rounded-lg">
+                <h4 className="text-gray-900 font-bold text-base mb-4 m-0">Cadastrar Subtarefa</h4>
+                {errorMsg && <div className="text-red-600 bg-red-50 p-3 rounded-md mb-4 text-sm">{errorMsg}</div>}
+                <form onSubmit={handleCreateSubtask}>
+                  <div className="mb-4">
+                    <label className="block text-gray-900 font-bold text-sm mb-1.5">Título</label>
+                    <input 
+                      type="text" 
+                      value={newSubtask.name}
+                      onChange={(e) => setNewSubtask({...newSubtask, name: e.target.value})}
+                      className="w-full bg-white border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-slate-900 box-border"
+                      required
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-gray-900 font-bold text-sm mb-1.5">Descrição</label>
+                    <textarea 
+                      value={newSubtask.description}
+                      onChange={(e) => setNewSubtask({...newSubtask, description: e.target.value})}
+                      className="w-full bg-white border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-900 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-slate-900 box-border"
+                    />
+                  </div>
+                  <div className="mb-5">
+                    <label className="block text-gray-900 font-bold text-sm mb-1.5">Prazo Final</label>
+                    <input 
+                      type="datetime-local" 
+                      value={newSubtask.deadline}
+                      onChange={(e) => setNewSubtask({...newSubtask, deadline: e.target.value})}
+                      className="w-full bg-white border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-slate-900 box-border"
+                      required
+                    />
+                  </div>
+                  <button 
+                    type="submit" 
+                    disabled={submittingSubtask}
+                    className={`bg-slate-900 text-white rounded-md px-4 py-2 text-sm font-medium border-none cursor-pointer ${submittingSubtask ? 'opacity-70 cursor-not-allowed' : 'hover:bg-slate-800'}`}
+                  >
+                    {submittingSubtask ? 'Salvando...' : 'Salvar Subtarefa'}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            <div>
+              <SubtaskList subtasks={task.subtasks} onStatusChange={handleSubtaskStatusChange} />
+            </div>
+          </div>
+
+          {/* --- Seção de Anexos --- */}
+          <div className="mb-10">
+            <div className="border-b border-gray-200 pb-2 mb-4">
+              <h3 className="text-gray-900 font-bold text-lg m-0 flex items-center gap-2">
+                <Paperclip size={18} />
+                Anexos
+              </h3>
+            </div>
+
+            <AttachmentList files={task.files} />
+
+            <div className="p-5 bg-gray-50 border border-dashed border-gray-300 rounded-lg">
+              <h4 className="text-gray-900 font-bold text-base mb-4 m-0">Adicionar Novo Anexo</h4>
+              {uploadError && <div className="text-red-600 bg-red-50 p-3 rounded-md mb-4 text-sm">{uploadError}</div>}
+              
+              <form onSubmit={handleFileUpload} className="flex items-center gap-3 flex-wrap">
+                <input 
+                  id="file-upload-input"
+                  type="file" 
+                  onChange={handleFileChange}
+                  className="flex-1 bg-white border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-500 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-900 file:text-white hover:file:bg-slate-800 box-border"
+                />
                 <button 
                   type="submit" 
-                  disabled={submittingSubtask}
-                  style={{ padding: '10px 20px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '4px', cursor: submittingSubtask ? 'not-allowed' : 'pointer' }}
+                  disabled={!selectedFile || uploading}
+                  className={`flex items-center gap-2 bg-slate-900 text-white rounded-md px-4 py-2 text-sm font-medium border-none cursor-pointer ${(!selectedFile || uploading) ? 'opacity-70 cursor-not-allowed' : 'hover:bg-slate-800'}`}
                 >
-                  {submittingSubtask ? 'Salvando...' : 'Salvar Subtarefa'}
+                  <Upload size={16} />
+                  {uploading ? 'Enviando...' : 'Anexar'}
                 </button>
               </form>
             </div>
-          )}
-
-          <div style={{ marginTop: '20px' }}>
-            <SubtaskList subtasks={task.subtasks} onStatusChange={handleSubtaskStatusChange} />
-          </div>
-        </div>
-
-        {/* --- Seção de Anexos --- */}
-        <div style={{ marginTop: '40px' }}>
-          <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '10px', marginBottom: '20px' }}>
-            <h3 style={{ color: 'var(--text-h)', margin: 0 }}>Anexos</h3>
           </div>
 
-          <div style={{ marginBottom: '20px' }}>
-            <AttachmentList files={task.files} />
-          </div>
+          {/* --- Seção de Comentários --- */}
+          <div>
+            <div className="border-b border-gray-200 pb-2 mb-4">
+              <h3 className="text-gray-900 font-bold text-lg m-0 flex items-center gap-2">
+                <MessageSquare size={18} />
+                Comentários
+              </h3>
+            </div>
 
-          <div style={{ padding: '20px', backgroundColor: 'var(--bg)', border: '1px dashed var(--border)', borderRadius: '8px' }}>
-            <h4 style={{ margin: '0 0 15px 0', color: 'var(--text-h)' }}>Adicionar Novo Anexo</h4>
-            {uploadError && <div style={{ color: '#ef4444', marginBottom: '15px', padding: '10px', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: '4px' }}>{uploadError}</div>}
-            
-            <form onSubmit={handleFileUpload} style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
-              <input 
-                id="file-upload-input"
-                type="file" 
-                onChange={handleFileChange}
-                style={{ flex: 1, padding: '8px', border: '1px solid var(--border)', borderRadius: '4px', backgroundColor: 'var(--bg)', color: 'var(--text)' }}
-              />
-              <button 
-                type="submit" 
-                disabled={!selectedFile || uploading}
-                style={{ padding: '10px 20px', backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '4px', cursor: (!selectedFile || uploading) ? 'not-allowed' : 'pointer' }}
-              >
-                {uploading ? 'Enviando...' : 'Anexar Arquivo'}
-              </button>
-            </form>
-          </div>
-        </div>
-
-        {/* --- Seção de Comentários --- */}
-        <div style={{ marginTop: '40px' }}>
-          <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '10px', marginBottom: '20px' }}>
-            <h3 style={{ color: 'var(--text-h)', margin: 0 }}>Comentários</h3>
-          </div>
-
-          <div style={{ marginBottom: '20px' }}>
             <CommentList comments={task.comments} />
-          </div>
 
-          <div style={{ padding: '20px', backgroundColor: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px' }}>
-            <h4 style={{ margin: '0 0 15px 0', color: 'var(--text-h)' }}>Adicionar Comentário</h4>
-            {commentError && <div style={{ color: '#ef4444', marginBottom: '15px', padding: '10px', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: '4px' }}>{commentError}</div>}
-            
-            <form onSubmit={handleCommentSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <textarea 
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Escreva seu comentário aqui..."
-                style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '4px', backgroundColor: 'var(--bg)', color: 'var(--text)', minHeight: '80px', boxSizing: 'border-box' }}
-                required
-              />
-              <button 
-                type="submit" 
-                disabled={!newComment.trim() || commenting}
-                style={{ alignSelf: 'flex-start', padding: '10px 20px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '4px', cursor: (!newComment.trim() || commenting) ? 'not-allowed' : 'pointer' }}
-              >
-                {commenting ? 'Enviando...' : 'Comentar'}
-              </button>
-            </form>
+            <div className="p-5 bg-gray-50 border border-gray-200 rounded-lg">
+              <h4 className="text-gray-900 font-bold text-base mb-4 m-0">Adicionar Comentário</h4>
+              {commentError && <div className="text-red-600 bg-red-50 p-3 rounded-md mb-4 text-sm">{commentError}</div>}
+              
+              <form onSubmit={handleCommentSubmit} className="flex flex-col gap-3">
+                <textarea 
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Escreva seu comentário aqui..."
+                  className="w-full bg-white border border-gray-200 rounded-md px-3 py-3 text-sm text-gray-900 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-slate-900 box-border"
+                  required
+                />
+                <button 
+                  type="submit" 
+                  disabled={!newComment.trim() || commenting}
+                  className={`self-start bg-slate-900 text-white rounded-md px-4 py-2 text-sm font-medium border-none cursor-pointer ${(!newComment.trim() || commenting) ? 'opacity-70 cursor-not-allowed' : 'hover:bg-slate-800'}`}
+                >
+                  {commenting ? 'Enviando...' : 'Comentar'}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       </div>

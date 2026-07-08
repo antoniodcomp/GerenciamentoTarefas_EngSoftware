@@ -17,3 +17,9 @@ export const getProjectDashboard = async (projectId) => {
   const response = await apiClient.get(`projects/${projectId}/dashboard/`);
   return response.data;
 };
+
+// Requisição PATCH para atualizar um projeto (ex: adicionar membros)
+export const updateProject = async (projectId, projectData) => {
+  const response = await apiClient.patch(`projects/${projectId}/`, projectData);
+  return response.data;
+};

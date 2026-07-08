@@ -9,6 +9,7 @@ import TelaCadastroUsuario from './pages/TelaCadastroUsuario'
 import TelaReconfirmarSenha from './pages/TelaReconfirmarSenha'
 import TelaPerfilUsuario from './pages/TelaPerfilUsuario'
 import ProtectedRoute from './components/ProtegeRota'
+import Layout from './components/Layout'
 import './App.css'
 
 function App() {
@@ -24,13 +25,15 @@ function App() {
         <Route path="/reconfirmar-senha" element={<TelaReconfirmarSenha />} />
 
         
-        {/* Rotas de Projetos Protegidas*/}
+        {/* Rotas de Projetos Protegidas com Layout (Sidebar + Topbar) */}
         <Route element={<ProtectedRoute />}>
-          <Route path="/projetos" element={<TelaProjetos />} />
-          <Route path="/projetos/novo" element={<TelaCadastroProjeto />} />
-          <Route path="/projetos/:id/dashboard" element={<TelaDashboard />} />
-          <Route path="/projetos/:projectId/tarefas/:taskId" element={<TelaDetalhesTarefa />} />
-          <Route path="/perfil" element={<TelaPerfilUsuario />} />
+          <Route element={<Layout />}>
+            <Route path="/projetos" element={<TelaProjetos />} />
+            <Route path="/projetos/novo" element={<TelaCadastroProjeto />} />
+            <Route path="/projetos/:id/dashboard" element={<TelaDashboard />} />
+            <Route path="/projetos/:projectId/tarefas/:taskId" element={<TelaDetalhesTarefa />} />
+            <Route path="/perfil" element={<TelaPerfilUsuario />} />
+          </Route>
         </Route>
       </Routes>
     </BrowserRouter>
