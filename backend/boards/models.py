@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q, F
 from django.conf import settings
 
 class Projeto(models.Model):
@@ -20,8 +21,13 @@ class Projeto(models.Model):
     )
 
     class Meta:
-        db_table = 'Projeto'
-
+        db_table = 'Projeto' # <-- Correto para Projeto
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(data_fim__gte=F('data_inicio')) | Q(data_inicio__isnull=True) | Q(data_fim__isnull=True),
+                name='%(class)s_data_fim_maior_ou_igual_inicio'
+            )
+        ]
     def __str__(self):
         return self.nome
 
@@ -48,7 +54,13 @@ class Tarefa(models.Model):
     )
 
     class Meta:
-        db_table = 'Tarefa'
+        db_table = 'Tarefa' # <-- Mude aqui para 'Tarefa'
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(data_fim__gte=F('data_inicio')) | Q(data_inicio__isnull=True) | Q(data_fim__isnull=True),
+                name='%(class)s_data_fim_maior_ou_igual_inicio'
+            )
+        ]
 
     def __str__(self):
         return f"{self.nome} ({self.status})"
@@ -76,7 +88,13 @@ class Subtarefa(models.Model):
     )
 
     class Meta:
-        db_table = 'Subtarefa'
+        db_table = 'Subtarefa' # <-- Mude aqui para 'Subtarefa'
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(data_fim__gte=F('data_inicio')) | Q(data_inicio__isnull=True) | Q(data_fim__isnull=True),
+                name='%(class)s_data_fim_maior_ou_igual_inicio'
+            )
+        ]
 
     def __str__(self):
         return f"{self.nome} ({self.status})"
