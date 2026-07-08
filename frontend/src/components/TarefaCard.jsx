@@ -5,7 +5,7 @@ import { Status } from '../constants';
  * Componente Puro (Presentational).
  * Apenas desenha a UI baseada nos dados recebidos, sem regras de negócio ou rede.
  */
-export const TarefaCard = ({ tarefa }) => {
+export const TarefaCard = ({ tarefa, onClick }) => {
   const getBadgeStyle = (status) => {
     switch (status) {
       case Status.CONCLUIDA:
@@ -20,16 +20,20 @@ export const TarefaCard = ({ tarefa }) => {
   const badgeStyle = getBadgeStyle(tarefa.status);
 
   return (
-    <div style={{
-      padding: '16px',
-      border: '1px solid #e5e7eb',
-      borderRadius: '8px',
-      backgroundColor: '#ffffff',
-      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '8px'
-    }}>
+    <div 
+      onClick={onClick}
+      style={{
+        padding: '16px',
+        border: '1px solid #e5e7eb',
+        borderRadius: '8px',
+        backgroundColor: '#ffffff',
+        boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px',
+        cursor: onClick ? 'pointer' : 'default'
+      }}
+    >
       <h3 style={{ margin: 0, fontSize: '18px', color: '#111827' }}>{tarefa.nome}</h3>
       <p style={{ margin: 0, fontSize: '14px', color: '#4b5563' }}>
         {tarefa.descricao || 'Sem descrição informada.'}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTarefas } from '../hooks/useTarefas';
 import { TarefaCard } from './TarefaCard';
 
@@ -8,6 +9,7 @@ import { TarefaCard } from './TarefaCard';
  * e passa pros filhos pintarem na tela.
  */
 export const TarefaList = ({ projetoId }) => {
+  const navigate = useNavigate();
   const { data: tarefas, isLoading, isError, error } = useTarefas(projetoId);
 
   if (isLoading) {
@@ -34,7 +36,11 @@ export const TarefaList = ({ projetoId }) => {
       padding: '20px 0' 
     }}>
       {tarefas.map((tarefa) => (
-        <TarefaCard key={tarefa.id} tarefa={tarefa} />
+        <TarefaCard 
+          key={tarefa.id} 
+          tarefa={tarefa} 
+          onClick={() => navigate(`/projetos/${projetoId}/tarefas/${tarefa.id}`)}
+        />
       ))}
     </div>
   );
