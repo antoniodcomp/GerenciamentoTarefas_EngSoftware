@@ -19,7 +19,6 @@ class ProjetoSerializer(serializers.ModelSerializer):
             required=False
         )
 
-
     class Meta:
         model = Projeto
         fields = ['id', 'name', 'description', 'startline', 'deadline', 'owner', 'created_at', 'participantes']
@@ -34,6 +33,18 @@ class ProjetoSerializer(serializers.ModelSerializer):
         if value_date < date.today():
             raise serializers.ValidationError("O prazo final do projeto não pode ser uma data no passado.")
         return value
+    
+    def validate(self, data):
+        # O DRF armazena os dados internamente usando o nome original do modelo (source='data_inicio')
+        data_inicio = data.get('data_inicio')
+        data_fim = data.get('data_fim')
+
+        if data_inicio and data_fim and data_fim < data_inicio:
+            raise serializers.ValidationError(
+                # Retornamos o erro no campo 'deadline' para o React destacar o campo correto na tela
+                {"deadline": "A data de término não pode ser cronologicamente anterior à data de início."}
+            )
+        return data
 
 class TarefaResumoSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='nome', read_only=True)
@@ -47,35 +58,55 @@ class TarefaResumoSerializer(serializers.ModelSerializer):
 class TarefaCreateSerializer(serializers.ModelSerializer):
         name = serializers.CharField(source='nome')
         description = serializers.CharField(source='descricao')
+        startline = serializers.DateTimeField(source='data_inicio', required=False, allow_null=True)
         deadline = serializers.DateTimeField(source='data_fim')
         project = serializers.PrimaryKeyRelatedField(queryset=Projeto.objects.all(), source='projeto')
         status = serializers.CharField(read_only=True)
 
         class Meta:
             model = Tarefa
-            fields = ['id', 'name', 'description', 'deadline', 'project', 'status']
+            fields = ['id', 'name', 'description', 'startline', 'deadline', 'project', 'status']
 
         def validate_name(self, value):
-            # Barrar registro se campo obrigatório estiver em branco
             if not value or value.strip() == "":
                 raise serializers.ValidationError("O título da tarefa é obrigatório.")
             return value
 
         def validate_deadline(self, value):
-            # Não permite tarefa sem prazo
             if not value:
                 raise serializers.ValidationError("O prazo final da tarefa é obrigatório.")
             return value
 
+        def validate(self, data):
+            data_inicio = data.get('data_inicio')
+            data_fim = data.get('data_fim')
+
+            if data_inicio and data_fim and data_fim < data_inicio:
+                raise serializers.ValidationError(
+                    {"deadline": "A data de término não pode ser cronologicamente anterior à data de início."}
+                )
+            return data
+
 class TarefaUpdateSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='nome')
     description = serializers.CharField(source='descricao')
+    startline = serializers.DateTimeField(source='data_inicio', required=False, allow_null=True)
     deadline = serializers.DateTimeField(source='data_fim')
     status = serializers.CharField()
     
     class Meta:
         model = Tarefa
-        fields = ['id', 'name', 'description' , 'deadline', 'status']
+        fields = ['id', 'name', 'description', 'startline', 'deadline', 'status']
+
+    def validate(self, data):
+        data_inicio = data.get('data_inicio')
+        data_fim = data.get('data_fim')
+
+        if data_inicio and data_fim and data_fim < data_inicio:
+            raise serializers.ValidationError(
+                {"deadline": "A data de término não pode ser cronologicamente anterior à data de início."}
+            )
+        return data
 
 class SubtarefaResumoSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='nome', read_only=True)
