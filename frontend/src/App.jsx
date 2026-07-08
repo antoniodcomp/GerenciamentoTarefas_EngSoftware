@@ -4,10 +4,11 @@ import TelaProjetos from './pages/TelaProjetos'
 import TelaCadastroProjeto from './pages/TelaCadastroProjeto'
 import TelaDashboard from './pages/TelaDashboard'
 import TelaDetalhesTarefa from './pages/TelaDetalhesTarefa'
-import TelaLogin from './pages/TelaLogin' // <-- Seu Import
-import TelaCadastroUsuario from './pages/TelaCadastroUsuario' // <-- Seu Import
+import TelaLogin from './pages/TelaLogin'
+import TelaCadastroUsuario from './pages/TelaCadastroUsuario'
 import TelaReconfirmarSenha from './pages/TelaReconfirmarSenha'
 import TelaPerfilUsuario from './pages/TelaPerfilUsuario'
+import ProtectedRoute from './components/ProtegeRota'
 import './App.css'
 
 function App() {
@@ -23,12 +24,14 @@ function App() {
         <Route path="/reconfirmar-senha" element={<TelaReconfirmarSenha />} />
 
         
-        {/* Rotas de Projetos*/}
-        <Route path="/projetos" element={<TelaProjetos />} />
-        <Route path="/projetos/novo" element={<TelaCadastroProjeto />} />
-        <Route path="/projetos/:id/dashboard" element={<TelaDashboard />} />
-        <Route path="/projetos/:projectId/tarefas/:taskId" element={<TelaDetalhesTarefa />} />
-        <Route path="/perfil" element={<TelaPerfilUsuario />} />
+        {/* Rotas de Projetos Protegidas*/}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/projetos" element={<TelaProjetos />} />
+          <Route path="/projetos/novo" element={<TelaCadastroProjeto />} />
+          <Route path="/projetos/:id/dashboard" element={<TelaDashboard />} />
+          <Route path="/projetos/:projectId/tarefas/:taskId" element={<TelaDetalhesTarefa />} />
+          <Route path="/perfil" element={<TelaPerfilUsuario />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   )
