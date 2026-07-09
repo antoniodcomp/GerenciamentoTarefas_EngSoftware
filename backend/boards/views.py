@@ -5,7 +5,6 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Projeto, Tarefa, Subtarefa, Anexo, ComentarioTarefa
 from .serializers import ProjetoSerializer, ProjetoDashboardSerializer, TarefaCreateSerializer, SubtarefaCreateSerializer, TarefaDetailSerializer, AnexoSerializer, ComentarioTarefaSerializer, TarefaUpdateSerializer, SubtarefaUpdateSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.exceptions import PermissionDenied
 from django.db.models import Q
 from .permissions import IsDonoOuParticipanteDoProjeto
 from .service import projeto_service, task_service
