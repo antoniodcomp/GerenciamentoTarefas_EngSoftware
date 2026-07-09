@@ -226,17 +226,22 @@ function TelaDashboard() {
           {activeTab === 'tarefas' && (
             <div className="animate-in fade-in duration-300">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                <div className="relative w-full max-w-md">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Search className="h-5 w-5 text-gray-400" />
+                <div className="flex flex-col sm:flex-row gap-4 items-stretch w-full max-w-xl">
+                  <div className="relative flex-1">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <Search className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Buscar tarefas..."
+                      value={taskSearchTerm}
+                      onChange={(e) => setTaskSearchTerm(e.target.value)}
+                      className="bg-white/80 backdrop-blur-xl border border-gray-200/60 rounded-2xl px-4 py-3 pl-11 w-full focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 outline-none text-[15px] transition-all shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] box-border"
+                    />
                   </div>
-                  <input
-                    type="text"
-                    placeholder="Buscar tarefas..."
-                    value={taskSearchTerm}
-                    onChange={(e) => setTaskSearchTerm(e.target.value)}
-                    className="bg-white/80 backdrop-blur-xl border border-gray-200/60 rounded-2xl px-4 py-3 pl-11 w-full focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 outline-none text-[15px] transition-all shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] box-border"
-                  />
+                  <button className="flex items-center justify-center gap-2 px-5 py-3 border border-gray-200/60 rounded-2xl bg-white/80 backdrop-blur-xl text-gray-700 hover:text-gray-900 hover:bg-white text-[15px] font-medium transition-all shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] cursor-pointer shrink-0">
+                    <Filter size={18} /> Filtros
+                  </button>
                 </div>
                 <button 
                   onClick={() => setTaskModalOpen(true)}
