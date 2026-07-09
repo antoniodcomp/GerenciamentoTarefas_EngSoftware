@@ -7,7 +7,8 @@ import {
   createSubtask,
   uploadTaskAttachment,
   createTaskComment,
-  updateSubtaskStatus
+  updateSubtaskStatus,
+  updateTaskAssignees
 } from '../services/taskService';
 
 // ==========================================
@@ -106,6 +107,17 @@ export function useUpdateSubtaskStatus() {
   return useMutation({
     mutationFn: ({ subtaskId, newStatus }) => updateSubtaskStatus(subtaskId, newStatus),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['taskDetails'] });
+    },
+  });
+}
+
+export function useUpdateTaskAssignees() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ taskId, userIds }) => updateTaskAssignees(taskId, userIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projectDashboard'] });
       queryClient.invalidateQueries({ queryKey: ['taskDetails'] });
     },
   });

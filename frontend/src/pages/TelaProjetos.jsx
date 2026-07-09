@@ -9,6 +9,14 @@ import { Plus, Search, Filter } from 'lucide-react';
 function TelaProjetos() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterStartDate, setFilterStartDate] = useState('');
+  const [filterEndDate, setFilterEndDate] = useState('');
+  const [filterMinTasks, setFilterMinTasks] = useState('');
+  const [filterMaxTasks, setFilterMaxTasks] = useState('');
+  const [filterMinProgress, setFilterMinProgress] = useState('');
+  const [filterMaxProgress, setFilterMaxProgress] = useState('');
+  const [projectToEdit, setProjectToEdit] = useState(null);
   const navigate = useNavigate();
 
   const { data: projects = [], isPending: isLoading, isError } = useProjetos();
@@ -17,11 +25,38 @@ function TelaProjetos() {
   const tipoUsuario = usuario?.role || usuario?.tipo;
   const podeAdicionar = tipoUsuario === 'GESTOR' || tipoUsuario === 'ADMINISTRADOR';
 
+  const getLocalDateOnly = (dateStr) => {
+    if (!dateStr) return null;
+    return new Date(dateStr.split('T')[0] + 'T00:00:00').getTime();
+  };
+
   const filteredProjects = projects.filter(project => {
     const term = searchTerm.toLowerCase();
     const matchesName = project.name.toLowerCase().includes(term);
     const matchesDesc = project.description ? project.description.toLowerCase().includes(term) : false;
-    return matchesName || matchesDesc;
+    if (!matchesName && !matchesDesc) return false;
+
+    if (filterStartDate) {
+      const fStart = new Date(filterStartDate + 'T00:00:00').getTime();
+      const pStart = getLocalDateOnly(project.startline || project.created_at);
+      if (!pStart || pStart < fStart) return false;
+    }
+
+    if (filterEndDate) {
+      const fEnd = new Date(filterEndDate + 'T00:00:00').getTime();
+      const pEnd = getLocalDateOnly(project.deadline);
+      if (!pEnd || pEnd > fEnd) return false;
+    }
+
+    const totalTasks = project.total_tasks || 0;
+    if (filterMinTasks && totalTasks < parseInt(filterMinTasks, 10)) return false;
+    if (filterMaxTasks && totalTasks > parseInt(filterMaxTasks, 10)) return false;
+
+    const progress = project.progress_percentage || 0;
+    if (filterMinProgress && progress < parseFloat(filterMinProgress)) return false;
+    if (filterMaxProgress && progress > parseFloat(filterMaxProgress)) return false;
+
+    return true;
   });
 
   return (
@@ -38,7 +73,7 @@ function TelaProjetos() {
           </div>
           {podeAdicionar && (
             <button 
-              onClick={() => setIsModalOpen(true)} 
+              onClick={() => { setProjectToEdit(null); setIsModalOpen(true); }} 
               className="bg-slate-900 text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-800 transition-all shadow-md hover:shadow-lg flex items-center gap-2 cursor-pointer border-none"
             >
               <Plus size={18} /> Novo Projeto
@@ -59,10 +94,100 @@ function TelaProjetos() {
               className="w-full bg-white/80 backdrop-blur-xl border border-gray-200/60 rounded-2xl px-4 py-3 pl-11 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 outline-none text-[15px] text-gray-900 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] transition-all placeholder-gray-400 box-border"
             />
           </div>
-          <button className="flex items-center gap-2 px-5 py-3 border border-gray-200/60 rounded-2xl bg-white/80 backdrop-blur-xl text-gray-700 hover:text-gray-900 hover:bg-white text-[15px] font-medium transition-all shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] cursor-pointer">
+          <button 
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex items-center gap-2 px-5 py-3 border border-gray-200/60 rounded-2xl text-[15px] font-medium transition-all shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] cursor-pointer ${showFilters ? 'bg-slate-900 text-white hover:bg-slate-800' : 'bg-white/80 backdrop-blur-xl text-gray-700 hover:text-gray-900 hover:bg-white'}`}
+          >
             <Filter size={18} /> Filtros
           </button>
         </div>
+
+        {showFilters && (
+          <div className="bg-white/80 backdrop-blur-xl border border-gray-200/60 rounded-3xl p-6 mb-8 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] animate-in fade-in slide-in-from-top-4 duration-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[13px] font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Data de Início</label>
+                  <input 
+                    type="date" 
+                    value={filterStartDate} 
+                    onChange={(e) => setFilterStartDate(e.target.value)} 
+                    className="w-full rounded-xl border-gray-200 bg-gray-50/50 px-4 py-2.5 text-[15px] focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none border box-border text-slate-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[13px] font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Data de Término</label>
+                  <input 
+                    type="date" 
+                    value={filterEndDate} 
+                    onChange={(e) => setFilterEndDate(e.target.value)} 
+                    className="w-full rounded-xl border-gray-200 bg-gray-50/50 px-4 py-2.5 text-[15px] focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none border box-border text-slate-900"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[13px] font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Mín. Tarefas</label>
+                  <input 
+                    type="number" 
+                    value={filterMinTasks} 
+                    onChange={(e) => setFilterMinTasks(e.target.value)} 
+                    className="w-full rounded-xl border-gray-200 bg-gray-50/50 px-4 py-2.5 text-[15px] focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none border box-border text-slate-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[13px] font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Máx. Tarefas</label>
+                  <input 
+                    type="number" 
+                    value={filterMaxTasks} 
+                    onChange={(e) => setFilterMaxTasks(e.target.value)} 
+                    className="w-full rounded-xl border-gray-200 bg-gray-50/50 px-4 py-2.5 text-[15px] focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none border box-border text-slate-900"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[13px] font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Mín. Progresso (%)</label>
+                  <input 
+                    type="number" 
+                    min="0" 
+                    max="100"
+                    value={filterMinProgress} 
+                    onChange={(e) => setFilterMinProgress(e.target.value)} 
+                    className="w-full rounded-xl border-gray-200 bg-gray-50/50 px-4 py-2.5 text-[15px] focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none border box-border text-slate-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[13px] font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Máx. Progresso (%)</label>
+                  <input 
+                    type="number" 
+                    min="0" 
+                    max="100"
+                    value={filterMaxProgress} 
+                    onChange={(e) => setFilterMaxProgress(e.target.value)} 
+                    className="w-full rounded-xl border-gray-200 bg-gray-50/50 px-4 py-2.5 text-[15px] focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none border box-border text-slate-900"
+                  />
+                </div>
+              </div>
+              <div className="flex items-end justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFilterStartDate('');
+                    setFilterEndDate('');
+                    setFilterMinTasks('');
+                    setFilterMaxTasks('');
+                    setFilterMinProgress('');
+                    setFilterMaxProgress('');
+                  }}
+                  className="px-5 py-2.5 border border-gray-200 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all cursor-pointer bg-white w-full sm:w-auto"
+                >
+                  Limpar Filtros
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {isLoading && (
           <div className="text-center py-20 text-gray-500 font-medium">Carregando projetos...</div>
@@ -81,7 +206,7 @@ function TelaProjetos() {
             </p>
             {!searchTerm && podeAdicionar && (
               <button 
-                onClick={() => setIsModalOpen(true)} 
+                onClick={() => { setProjectToEdit(null); setIsModalOpen(true); }} 
                 className="bg-white border border-gray-200/80 text-gray-900 rounded-xl px-5 py-2.5 hover:bg-gray-50 transition-all shadow-sm font-medium text-sm cursor-pointer"
               >
                 Criar Primeiro Projeto
@@ -93,12 +218,16 @@ function TelaProjetos() {
         {!isLoading && !isError && filteredProjects.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProjects.map((project) => (
-              <ProjetoCard key={project.id} project={project} />
+              <ProjetoCard 
+                key={project.id} 
+                project={project} 
+                onEdit={(p) => { setProjectToEdit(p); setIsModalOpen(true); }} 
+              />
             ))}
           </div>
         )}
 
-        <ProjetoModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+        <ProjetoModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setProjectToEdit(null); }} projectToEdit={projectToEdit} />
       </div>
     </div>
   );

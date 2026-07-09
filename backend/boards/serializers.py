@@ -237,15 +237,16 @@ class TarefaCreateSerializer(serializers.ModelSerializer):
     ]
 )
 class TarefaUpdateSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='nome')
-    description = serializers.CharField(source='descricao')
+    name = serializers.CharField(source='nome', required=False)
+    description = serializers.CharField(source='descricao', required=False)
     startline = serializers.DateTimeField(source='data_inicio', required=False, allow_null=True)
-    deadline = serializers.DateTimeField(source='data_fim')
-    status = serializers.CharField()
+    deadline = serializers.DateTimeField(source='data_fim', required=False)
+    status = serializers.CharField(required=False)
+    participantes = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), many=True, required=False)
     
     class Meta:
         model = Tarefa
-        fields = ['id', 'name', 'description', 'startline', 'deadline', 'status']
+        fields = ['id', 'name', 'description', 'startline', 'deadline', 'status', 'participantes']
 
     def validate(self, data):
         data_inicio = data.get('data_inicio')

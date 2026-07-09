@@ -2,13 +2,13 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django.utils import timezone
 from .models import Projeto, Tarefa, Subtarefa, Anexo, ComentarioTarefa
 from .serializers import ProjetoSerializer, ProjetoDashboardSerializer, TarefaCreateSerializer, SubtarefaCreateSerializer, TarefaDetailSerializer, AnexoSerializer, ComentarioTarefaSerializer, TarefaUpdateSerializer, SubtarefaUpdateSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.exceptions import PermissionDenied
 from django.db.models import Q
+from rest_framework.exceptions import PermissionDenied
 from .permissions import IsDonoOuParticipanteDoProjeto
+from .service import projeto_service, task_service
 from drf_spectacular.utils import extend_schema, extend_schema_view
 
 @extend_schema(
@@ -45,6 +45,11 @@ class ProjetoViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("Apenas gestores ou administradores podem excluir projetos.")
         return super().destroy(request, *args, **kwargs)
 
+    def perform_update(self, serializer):
+        if self.request.user.tipo not in ['GESTOR', 'ADMINISTRADOR']:
+            raise PermissionDenied("Apenas gestores ou administradores podem alterar os dados do projeto.")
+        serializer.save()
+
     @action(detail=True, methods=['get'])
     def dashboard(self, request, pk=None):
         """
@@ -53,31 +58,12 @@ class ProjetoViewSet(viewsets.ModelViewSet):
         Retorna os dados gerais do projeto e as métricas calculadas em tempo real.
         """
         projeto = self.get_object() # Garante que o projeto existe e o usuário tem permissão
-        tarefas = projeto.tarefas.all()
         
-        # Cálculo de Indicadores (UC14)
-        total_tasks = tarefas.count()
-        pending_tasks = tarefas.filter(status=Tarefa.PENDENTE).count()
-        in_progress_tasks = tarefas.filter(status=Tarefa.EM_ANDAMENTO).count()
-        completed_tasks = tarefas.filter(status=Tarefa.CONCLUIDA).count()
-        
-        # Progresso Geral (UC14)
-        progress_percentage = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
-        
-        # Tarefas Atrasadas (RF59) - Não estão concluídas e o prazo já passou
-        now = timezone.now()
-        delayed_tasks = tarefas.exclude(status=Tarefa.CONCLUIDA).filter(data_fim__lt=now)
-        
-        # Anexando as métricas no objeto do projeto (em memória, sem salvar no banco)
-        projeto.total_tasks = total_tasks
-        projeto.pending_tasks = pending_tasks
-        projeto.in_progress_tasks = in_progress_tasks
-        projeto.completed_tasks = completed_tasks
-        projeto.progress_percentage = round(progress_percentage, 2)
-        projeto.delayed_tasks = delayed_tasks
+        # Delegando a chamada para a classe service
+        projeto_processado = projeto_service.ProjetoService.preparar_dados_dashboard(projeto)
         
         # Serializa com o serializer de dashboard
-        serializer = ProjetoDashboardSerializer(projeto)
+        serializer = ProjetoDashboardSerializer(projeto_processado)
         
         # O UC10 indica que o painel de indicadores é retornado ao visualizar o projeto em detalhes.
         return Response(serializer.data)
@@ -131,28 +117,9 @@ class TarefaViewSet(viewsets.ModelViewSet):
             ).distinct()
 
     def perform_create(self, serializer):
-        projeto = serializer.validated_data.get('projeto')
-
-        if projeto.dono != self.request.user and self.request.user not in projeto.participantes.all():
-            raise PermissionDenied("Você não tem perfil/permissão de Gestor neste projeto.")
-
-        tarefa = serializer.save()
-
-
-        responsaveis = list(projeto.participantes.all())
-        if projeto.dono not in responsaveis:
-            responsaveis.append(projeto.dono)
-
-        for responsavel in responsaveis:
-            if responsavel != self.request.user:
-                    
-                    
-                    """
-                    
-                       
-            
-                    )
-                    """
+        # Delega a criação da tarefa para a classe service
+        task_service.TaskService.processar_criacao_tarefa(serializer, self.request.user)
+        
     def get_serializer_class(self):
         if self.action == 'retrieve':
             return TarefaDetailSerializer
@@ -161,6 +128,11 @@ class TarefaViewSet(viewsets.ModelViewSet):
         return TarefaCreateSerializer
 
     def perform_update(self, serializer):
+        user = self.request.user
+        if user.tipo not in ['GESTOR', 'ADMINISTRADOR']:
+            sent_fields = set(self.request.data.keys())
+            if sent_fields - {'status'}:
+                raise PermissionDenied("Apenas gestores ou administradores podem modificar estes campos da tarefa.")
         instance = serializer.save()
         if instance.status == 'CONCLUIDA':
             instance.subtarefas.update(status='CONCLUIDA')
@@ -217,23 +189,9 @@ class SubtarefaViewSet(viewsets.ModelViewSet):
         ).distinct()
 
     def perform_create(self, serializer):
-        tarefa = serializer.validated_data.get('tarefa')
-        projeto = tarefa.projeto
-
-        if projeto.dono != self.request.user and self.request.user not in projeto.participantes.all():
-            raise PermissionDenied("Você não tem permissão para criar subtarefas nesta tarefa.")
-
-        subtarefa = serializer.save()
-
-           
-        responsaveis = list(projeto.participantes.all())
-        if projeto.dono not in responsaveis:
-            responsaveis.append(projeto.dono)
-
-        for responsavel in responsaveis:
-            if responsavel != self.request.user:
-                print(f"[NOTIFICAÇÃO] Para {responsavel.username}: Nova subtarefa '{subtarefa.nome}' criada na tarefa '{tarefa.nome}' do projeto'{projeto.nome}'")
-
+        # Delega a criação da subtarefa para a camada service
+        task_service.TaskService.processar_criacao_subtarefa(serializer, self.request.user)
+        
 
 @extend_schema_view(
     list=extend_schema(
@@ -271,7 +229,6 @@ class SubtarefaViewSet(viewsets.ModelViewSet):
     )
 )
 
-
 class AnexoViewSet(viewsets.ModelViewSet):
     serializer_class = AnexoSerializer
     permission_classes = [IsAuthenticated, IsDonoOuParticipanteDoProjeto]
@@ -284,17 +241,8 @@ class AnexoViewSet(viewsets.ModelViewSet):
         ).distinct()
 
     def perform_create(self, serializer):
-        tarefa = serializer.validated_data.get('tarefa')
-        projeto = tarefa.projeto
-        
-        
-        if projeto.dono != self.request.user and self.request.user not in projeto.participantes.all():
-            raise PermissionDenied("Você não tem permissão para anexar arquivos nesta tarefa.")
-            
-        serializer.save(usuario=self.request.user)
-
-
-
+        # Delega a verificação de regras para o TaskService
+        task_service.TaskService.processar_anexo(serializer, self.request.user)
 
 
 @extend_schema_view(
@@ -345,11 +293,5 @@ class ComentarioTarefaViewSet(viewsets.ModelViewSet):
         ).distinct()
 
     def perform_create(self, serializer):
-        tarefa = serializer.validated_data.get('tarefa')
-        projeto = tarefa.projeto
-        
-        # RF22 / UC24: Permissão de Comentário (Gestores e Usuários Comuns podem comentar)
-        if projeto.dono != self.request.user and self.request.user not in projeto.participantes.all():
-            raise PermissionDenied("Você não tem permissão para comentar nesta tarefa.")
-            
-        serializer.save(usuario=self.request.user)
+        # Delega a verificação de regras para o TaskService
+        task_service.TaskService.processar_comentario(serializer, self.request.user)

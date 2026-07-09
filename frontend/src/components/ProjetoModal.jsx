@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { useCreateProjeto } from '../hooks/useProjetos';
 import { usePerfil, useUsuarios } from '../hooks/usePerfil';
+import { useCreateProjeto, useUpdateProjeto } from '../hooks/useProjetos';
 import { X } from 'lucide-react';
 
-export default function ProjetoModal({ isOpen, onClose }) {
+export default function ProjetoModal({ isOpen, onClose, projectToEdit }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [startline, setStartline] = useState('');
@@ -17,7 +17,10 @@ export default function ProjetoModal({ isOpen, onClose }) {
   const dropdownRef = useRef(null);
 
   const createProjetoMutation = useCreateProjeto();
-  const loading = createProjetoMutation.isPending;
+  const updateProjetoMutation = useUpdateProjeto();
+  
+  const isEditing = !!projectToEdit;
+  const loading = isEditing ? updateProjetoMutation.isPending : createProjetoMutation.isPending;
 
   const { data: usuario, isPending: carregandoPerfil } = usePerfil();
   const tipoUsuario = usuario?.role || usuario?.tipo;
@@ -25,6 +28,20 @@ export default function ProjetoModal({ isOpen, onClose }) {
 
   useEffect(() => {
     if (isOpen) {
+      if (projectToEdit) {
+        setName(projectToEdit.name || '');
+        setDescription(projectToEdit.description || '');
+        setStartline(projectToEdit.startline ? projectToEdit.startline.split('T')[0] : '');
+        setDeadline(projectToEdit.deadline ? projectToEdit.deadline.split('T')[0] : '');
+        setParticipantes(projectToEdit.participantes || []);
+      } else {
+        setName('');
+        setDescription('');
+        setStartline('');
+        setDeadline('');
+        setParticipantes([]);
+      }
+
       document.body.style.overflow = 'hidden';
       const handleEsc = (e) => {
         if (e.key === 'Escape') onClose();
@@ -35,7 +52,7 @@ export default function ProjetoModal({ isOpen, onClose }) {
         window.removeEventListener('keydown', handleEsc);
       };
     }
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, projectToEdit]);
 
   useEffect(() => {
     const handleClickFora = (e) => {
@@ -88,39 +105,55 @@ export default function ProjetoModal({ isOpen, onClose }) {
 
     setFormError('');
 
-    createProjetoMutation.mutate({
+    const payload = {
       name: name.trim(),
       description: description.trim() || null,
       startline: startline || null,
       deadline,
       participantes: participantes.map(p => p.id),
-    }, {
-      onSuccess: () => {
-        setName('');
-        setDescription('');
-        setStartline('');
-        setDeadline('');
-        setParticipantes([]);
-        setBuscarUsuario('');
-        onClose();
-      },
-      onError: (err) => {
-        console.error(err);
-        if (err.response && err.response.data) {
-          const backendErrors = err.response.data;
-          if (typeof backendErrors === 'object') {
-            const messages = Object.entries(backendErrors)
-              .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(' ') : msgs}`)
-              .join(' | ');
-            setFormError(messages || 'Erro ao cadastrar o projeto. Verifique os dados.');
-          } else {
-            setFormError('Ocorreu um erro no servidor. Tente novamente mais tarde.');
-          }
+    }; 
+
+    const handleSuccess = () => {
+      setName('');
+      setDescription('');
+      setStartline('');
+      setDeadline('');
+      setParticipantes([]);
+      setBuscarUsuario('');
+      onClose();
+    };
+
+    const handleError = (err) => {
+      console.error(err);
+      if (err.response && err.response.data) {
+        const backendErrors = err.response.data;
+        if (typeof backendErrors === 'object') {
+          const messages = Object.entries(backendErrors)
+            .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(' ') : msgs}`)
+            .join(' | ');
+          setFormError(messages || 'Erro ao salvar o projeto. Verifique os dados.');
         } else {
-          setFormError('Não foi possível conectar ao servidor. Tente novamente.');
+          setFormError('Ocorreu um erro no servidor. Tente novamente mais tarde.');
         }
+      } else {
+        setFormError('Não foi possível conectar ao servidor. Tente novamente.');
       }
-    });
+    };
+
+    if (isEditing) {
+      updateProjetoMutation.mutate({
+        projectId: projectToEdit.id,
+        data: payload
+      }, {
+        onSuccess: handleSuccess,
+        onError: handleError
+      });
+    } else {
+      createProjetoMutation.mutate(payload, {
+        onSuccess: handleSuccess,
+        onError: handleError
+      });
+    }
   };
 
   if (carregandoPerfil) return null;
@@ -147,8 +180,8 @@ export default function ProjetoModal({ isOpen, onClose }) {
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl relative" onClick={e => e.stopPropagation()}>
         <div className="p-6 border-b border-[#E5E7EB] flex justify-between items-start">
           <div>
-            <h2 className="text-xl font-bold text-[#0A0A0A] m-0">Criar Novo Projeto</h2>
-            <p className="text-sm text-[#6B7280] m-0 mt-1">Preencha as informações do projeto</p>
+            <h2 className="text-xl font-bold text-[#0A0A0A] m-0">{isEditing ? 'Editar Projeto' : 'Criar Novo Projeto'}</h2>
+            <p className="text-sm text-[#6B7280] m-0 mt-1">{isEditing ? 'Atualize as informações do projeto' : 'Preencha as informações do projeto'}</p>
           </div>
           <button 
             onClick={onClose}
@@ -287,7 +320,7 @@ export default function ProjetoModal({ isOpen, onClose }) {
               disabled={loading}
               className="bg-[#0A0A0A] text-white font-medium rounded-lg px-5 py-2.5 hover:bg-black transition-colors text-sm"
             >
-              {loading ? 'Salvando...' : 'Criar Projeto'}
+              {loading ? 'Salvando...' : isEditing ? 'Salvar Alterações' : 'Criar Projeto'}
             </button>
           </div>
         </form>
