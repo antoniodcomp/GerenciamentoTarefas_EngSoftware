@@ -52,7 +52,7 @@ const SubtaskModal = ({ isOpen, onClose, onSubmit, submitting, newSubtask, setNe
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Data Término</label>
-                <input type="datetime-local" value={newSubtask.deadline} onChange={e => setNewSubtask({...newSubtask, deadline: e.target.value})} className="w-full rounded-xl border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm focus:border-slate-500 focus:ring-1 focus:ring-slate-500 transition-all outline-none border box-border" required />
+                <input type="date" value={newSubtask.deadline} onChange={e => setNewSubtask({...newSubtask, deadline: e.target.value})} className="w-full rounded-xl border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm focus:border-slate-500 focus:ring-1 focus:ring-slate-500 transition-all outline-none border box-border" required />
               </div>
             </div>
             <div className="pt-4 flex justify-end gap-3 border-t border-gray-100 mt-6">
