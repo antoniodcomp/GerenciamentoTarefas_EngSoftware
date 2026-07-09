@@ -122,6 +122,11 @@ class TarefaViewSet(viewsets.ModelViewSet):
         return TarefaCreateSerializer
 
     def perform_update(self, serializer):
+        user = self.request.user
+        if user.tipo not in ['GESTOR', 'ADMINISTRADOR']:
+            sent_fields = set(self.request.data.keys())
+            if sent_fields - {'status'}:
+                raise PermissionDenied("Apenas gestores ou administradores podem modificar estes campos da tarefa.")
         instance = serializer.save()
         if instance.status == 'CONCLUIDA':
             instance.subtarefas.update(status='CONCLUIDA')

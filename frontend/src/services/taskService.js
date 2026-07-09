@@ -36,12 +36,16 @@ export const createTaskComment = async (commentData) => {
   return response.data;
 };
 
-// Requisição POST para envio de anexo na tarefa
 export const uploadTaskAttachment = async (formData) => {
   const response = await apiClient.post('attachments/', formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
   });
+  return response.data;
+};
+
+export const updateTaskAssignees = async (taskId, userIds) => {
+  const response = await apiClient.patch(`tasks/${taskId}/`, { participantes: userIds });
   return response.data;
 };
