@@ -45,6 +45,11 @@ class ProjetoViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("Apenas gestores ou administradores podem excluir projetos.")
         return super().destroy(request, *args, **kwargs)
 
+    def perform_update(self, serializer):
+        if self.request.user.tipo not in ['GESTOR', 'ADMINISTRADOR']:
+            raise PermissionDenied("Apenas gestores ou administradores podem alterar os dados do projeto.")
+        serializer.save()
+
     @action(detail=True, methods=['get'])
     def dashboard(self, request, pk=None):
         """

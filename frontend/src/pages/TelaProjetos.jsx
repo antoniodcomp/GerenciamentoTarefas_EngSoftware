@@ -16,6 +16,7 @@ function TelaProjetos() {
   const [filterMaxTasks, setFilterMaxTasks] = useState('');
   const [filterMinProgress, setFilterMinProgress] = useState('');
   const [filterMaxProgress, setFilterMaxProgress] = useState('');
+  const [projectToEdit, setProjectToEdit] = useState(null);
   const navigate = useNavigate();
 
   const { data: projects = [], isPending: isLoading, isError } = useProjetos();
@@ -72,7 +73,7 @@ function TelaProjetos() {
           </div>
           {podeAdicionar && (
             <button 
-              onClick={() => setIsModalOpen(true)} 
+              onClick={() => { setProjectToEdit(null); setIsModalOpen(true); }} 
               className="bg-slate-900 text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-800 transition-all shadow-md hover:shadow-lg flex items-center gap-2 cursor-pointer border-none"
             >
               <Plus size={18} /> Novo Projeto
@@ -205,7 +206,7 @@ function TelaProjetos() {
             </p>
             {!searchTerm && podeAdicionar && (
               <button 
-                onClick={() => setIsModalOpen(true)} 
+                onClick={() => { setProjectToEdit(null); setIsModalOpen(true); }} 
                 className="bg-white border border-gray-200/80 text-gray-900 rounded-xl px-5 py-2.5 hover:bg-gray-50 transition-all shadow-sm font-medium text-sm cursor-pointer"
               >
                 Criar Primeiro Projeto
@@ -217,12 +218,16 @@ function TelaProjetos() {
         {!isLoading && !isError && filteredProjects.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProjects.map((project) => (
-              <ProjetoCard key={project.id} project={project} />
+              <ProjetoCard 
+                key={project.id} 
+                project={project} 
+                onEdit={(p) => { setProjectToEdit(p); setIsModalOpen(true); }} 
+              />
             ))}
           </div>
         )}
 
-        <ProjetoModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+        <ProjetoModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setProjectToEdit(null); }} projectToEdit={projectToEdit} />
       </div>
     </div>
   );

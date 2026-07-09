@@ -11,7 +11,7 @@ const formatDate = (dateString) => {
   return utcDate.toLocaleDateString('pt-BR');
 };
 
-export default function ProjetoCard({ project }) {
+export default function ProjetoCard({ project, onEdit }) {
   const navigate = useNavigate();
   const menuRef = useRef(null);
   const [showMenu, setShowMenu] = useState(false);
@@ -68,6 +68,16 @@ export default function ProjetoCard({ project }) {
 
             {showMenu && (
               <div className="absolute right-0 mt-2 w-48 bg-white border border-[#E5E7EB] rounded-lg shadow-lg py-1 z-10">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowMenu(false);
+                    if (onEdit) onEdit(project);
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors font-medium border-b border-gray-100"
+                >
+                  Editar Projeto
+                </button>
                 <button
                   onClick={handleDeleteClick}
                   className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors font-medium"
