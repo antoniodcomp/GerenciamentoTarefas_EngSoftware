@@ -84,3 +84,15 @@ O projeto conta com suites de testes unitarios (APITestCase do Django) que valid
 
 Para executar os testes, assegure-se de que o ambiente virtual esteja ativo na raiz da pasta backend e execute:
 python manage.py test boards
+
+## Observações Importantes
+
+### Resolução de Conflitos de Porta (Docker)
+O `docker-compose.yml` está configurado para permitir a alteração dinâmica das portas, caso as portas padrão (8000, 5173, 5432) já estejam em uso na sua máquina. 
+Para alterar as portas, basta criar um arquivo `.env` na raiz do projeto contendo as variáveis:
+```env
+FRONTEND_PORT=3000
+BACKEND_PORT=8001
+DB_EXTERNAL_PORT=5434
+```
+Ao rodar `docker compose up --build`, o Docker lerá automaticamente essas variáveis e exporá os serviços nas portas definidas, sem a necessidade de alterar o código-fonte.
