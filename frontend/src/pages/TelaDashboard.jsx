@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useProjectDashboard, useCreateTarefa, useUpdateTaskStatus } from '../hooks/useTarefas';
+import { usePerfil } from '../hooks/usePerfil';
 import { TarefaList } from '../components/TarefaList';
 import AddMembroModal from '../components/AddMembroModal';
 import { ArrowLeft, LayoutDashboard, ListTodo, AlertTriangle, CheckCircle2, Clock, ChevronDown, Search, Plus, Filter, X, Calendar as CalendarIcon, Users } from 'lucide-react';
@@ -25,6 +26,10 @@ function TelaDashboard() {
   const { data, isLoading, isError } = useProjectDashboard(id);
   const { mutateAsync: createTarefa, isPending: taskLoading, error: taskErrorObj } = useCreateTarefa();
   const { mutate: updateStatus } = useUpdateTaskStatus();
+  const { data: usuario } = usePerfil();
+
+  const tipoUsuario = usuario?.role || usuario?.tipo;
+  const podeAdicionarTarefa = tipoUsuario === 'GESTOR' || tipoUsuario === 'ADMINISTRADOR';
 
   const [taskName, setTaskName] = useState('');
   const [taskDesc, setTaskDesc] = useState('');
@@ -243,12 +248,14 @@ function TelaDashboard() {
                     <Filter size={18} /> Filtros
                   </button>
                 </div>
-                <button 
-                  onClick={() => setTaskModalOpen(true)}
-                  className="bg-slate-900 text-white rounded-xl px-5 py-3 hover:bg-slate-800 flex items-center gap-2 text-[14px] font-medium transition-all shadow-md hover:shadow-lg shrink-0 cursor-pointer border-none"
-                >
-                  <Plus size={18} /> Nova Tarefa
-                </button>
+                {podeAdicionarTarefa && (
+                  <button 
+                    onClick={() => setTaskModalOpen(true)}
+                    className="bg-slate-900 text-white rounded-xl px-5 py-3 hover:bg-slate-800 flex items-center gap-2 text-[14px] font-medium transition-all shadow-md hover:shadow-lg shrink-0 cursor-pointer border-none"
+                  >
+                    <Plus size={18} /> Nova Tarefa
+                  </button>
+                )}
               </div>
 
               <TarefaList projetoId={id} searchTerm={taskSearchTerm} />
