@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useCreateProjeto } from '../hooks/useProjetos';
-import { usePerfil } from '../hooks/usePerfil';
+import { usePerfil, useUsuarios } from '../hooks/usePerfil';
 import { X } from 'lucide-react';
 
 export default function ProjetoModal({ isOpen, onClose }) {
@@ -10,12 +10,18 @@ export default function ProjetoModal({ isOpen, onClose }) {
   const [startline, setStartline] = useState('');
   const [deadline, setDeadline] = useState('');
   const [formError, setFormError] = useState('');
+  
+  const [participantes, setParticipantes] = useState([]);
+  const [buscarUsuario, setBuscarUsuario] = useState('');
+  const [mostrarDropdown, setMostrarDropdown] = useState(false);
+  const dropdownRef = useRef(null);
 
   const createProjetoMutation = useCreateProjeto();
   const loading = createProjetoMutation.isPending;
 
   const { data: usuario, isPending: carregandoPerfil } = usePerfil();
   const tipoUsuario = usuario?.role || usuario?.tipo;
+  const { data: todosUsuarios = [] } = useUsuarios(!!usuario);
 
   useEffect(() => {
     if (isOpen) {
@@ -31,7 +37,36 @@ export default function ProjetoModal({ isOpen, onClose }) {
     }
   }, [isOpen, onClose]);
 
+  useEffect(() => {
+    const handleClickFora = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setMostrarDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickFora);
+    return () => document.removeEventListener('mousedown', handleClickFora);
+  }, []);
+
   if (!isOpen) return null;
+
+  const usuariosFiltrados = todosUsuarios.filter(u =>
+    u.id !== usuario?.id &&
+    !participantes.find(p => p.id === u.id) &&
+    (
+      (u.name || '').toLowerCase().includes(buscarUsuario.toLowerCase()) ||
+      (u.email || '').toLowerCase().includes(buscarUsuario.toLowerCase())
+    )
+  );
+
+  const adicionarParticipante = (user) => {
+    setParticipantes(prev => [...prev, user]);
+    setBuscarUsuario('');
+    setMostrarDropdown(false);
+  };
+
+  const removerParticipante = (userId) => {
+    setParticipantes(prev => prev.filter(p => p.id !== userId));
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -58,12 +93,15 @@ export default function ProjetoModal({ isOpen, onClose }) {
       description: description.trim() || null,
       startline: startline || null,
       deadline,
+      participantes: participantes.map(p => p.id),
     }, {
       onSuccess: () => {
         setName('');
         setDescription('');
         setStartline('');
         setDeadline('');
+        setParticipantes([]);
+        setBuscarUsuario('');
         onClose();
       },
       onError: (err) => {
@@ -180,6 +218,59 @@ export default function ProjetoModal({ isOpen, onClose }) {
                 required
               />
             </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-bold text-[#0A0A0A]">Adicionar Participantes</label>
+
+            {participantes.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-1">
+                {participantes.map(p => (
+                  <span key={p.id} className="flex items-center gap-1 bg-[#0A0A0A] text-white text-xs font-medium px-3 py-1 rounded-full">
+                    {p.name}
+                    <button type="button" onClick={() => removerParticipante(p.id)} className="ml-1 hover:text-red-300 transition-colors">
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <div className="relative" ref={dropdownRef}>
+              <input
+                type="text"
+                placeholder="Buscar por nome ou e-mail..."
+                value={buscarUsuario}
+                onChange={(e) => { setBuscarUsuario(e.target.value); setMostrarDropdown(true); }}
+                onFocus={() => setMostrarDropdown(true)}
+                disabled={loading}
+                className="bg-[#F3F4F6] border border-[#E5E7EB] rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-[#0A0A0A] outline-none w-full text-sm transition-shadow"
+              />
+
+              {mostrarDropdown && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-[#E5E7EB] rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  {usuariosFiltrados.length === 0 ? (
+                    <div className="px-4 py-3 text-sm text-[#6B7280]">Nenhum usuário encontrado.</div>
+                  ) : (
+                    usuariosFiltrados.map(u => (
+                      <button
+                        key={u.id}
+                        type="button"
+                        onClick={() => adicionarParticipante(u)}
+                        className="w-full text-left px-4 py-3 hover:bg-[#F3F4F6] transition-colors border-b border-[#E5E7EB] last:border-0"
+                      >
+                        <p className="text-sm font-medium text-[#0A0A0A]">{u.name}</p>
+                        <p className="text-xs text-[#6B7280]">{u.email} · {u.professional_role}</p>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+
+            {participantes.length === 0 && (
+              <p className="text-xs text-[#6B7280]">Você será adicionado automaticamente como gestor do projeto.</p>
+            )}
           </div>
 
           <div className="flex justify-end gap-3 mt-4 pt-6 border-t border-[#E5E7EB]">
