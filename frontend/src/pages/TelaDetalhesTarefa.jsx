@@ -8,7 +8,7 @@ import {
   useUpdateTaskStatus, 
   useUpdateSubtaskStatus 
 } from '../hooks/useTarefas';
-import { ArrowLeft, MoreHorizontal, CheckCircle2, Circle, Paperclip, Calendar, Clock, ChevronDown, Plus, X, Upload } from 'lucide-react';
+import { ArrowLeft, MoreHorizontal, CheckCircle2, Circle, Paperclip, Calendar, Clock, ChevronDown, Plus, X, Upload, FileText } from 'lucide-react';
 
 const formatDate = (dateString) => {
   if (!dateString) return '-';
@@ -38,26 +38,53 @@ const SubtaskModal = ({ isOpen, onClose, onSubmit, submitting, newSubtask, setNe
           {errorMsg && <div className="text-red-600 bg-red-50 p-3 rounded-xl mb-4 text-sm">{errorMsg}</div>}
           <form onSubmit={onSubmit} className="space-y-4 m-0">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
-              <input type="text" value={newSubtask.name} onChange={e => setNewSubtask({...newSubtask, name: e.target.value})} className="w-full rounded-xl border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm focus:border-slate-500 focus:ring-1 focus:ring-slate-500 transition-all outline-none border box-border" required />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Título</label>
+              <input 
+                type="text" 
+                value={newSubtask.name} 
+                onChange={e => setNewSubtask({...newSubtask, name: e.target.value})} 
+                className="w-full rounded-xl border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm focus:border-slate-500 focus:ring-1 focus:ring-slate-500 transition-all outline-none border box-border" 
+                required 
+              />
             </div>
-          </div>
-          <div className="relative inline-block">
-            <select 
-              value={subtask.status} 
-              onChange={(e) => onStatusChange(subtask.id, e.target.value)}
-              className={`rounded-full pl-3 pr-7 py-0.5 text-xs font-semibold cursor-pointer border-none outline-none text-left appearance-none ${getTaskBadgeClass(subtask.status)}`}
-              style={{ WebkitAppearance: 'none', MozAppearance: 'none' }}
-            >
-              <option value="PENDENTE" className="text-gray-900 bg-white">PENDENTE</option>
-              <option value="EM_ANDAMENTO" className="text-gray-900 bg-white">EM ANDAMENTO</option>
-              <option value="CONCLUIDA" className="text-gray-900 bg-white">CONCLUÍDA</option>
-            </select>
-            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-current pointer-events-none opacity-70" />
-          </div>
-        </li>
-      ))}
-    </ul>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+              <textarea 
+                value={newSubtask.description} 
+                onChange={e => setNewSubtask({...newSubtask, description: e.target.value})} 
+                className="w-full rounded-xl border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm focus:border-slate-500 focus:ring-1 focus:ring-slate-500 transition-all outline-none border box-border min-h-[80px]" 
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Prazo Final</label>
+              <input 
+                type="datetime-local" 
+                value={newSubtask.deadline} 
+                onChange={e => setNewSubtask({...newSubtask, deadline: e.target.value})} 
+                className="w-full rounded-xl border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm focus:border-slate-500 focus:ring-1 focus:ring-slate-500 transition-all outline-none border box-border" 
+                required 
+              />
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <button 
+                type="button" 
+                onClick={onClose} 
+                className="px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors cursor-pointer bg-white"
+              >
+                Cancelar
+              </button>
+              <button 
+                type="submit" 
+                disabled={submitting} 
+                className="px-4 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-medium hover:bg-slate-800 transition-all disabled:opacity-50 cursor-pointer border-none"
+              >
+                {submitting ? 'Salvando...' : 'Salvar Subtarefa'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   );
 };
 

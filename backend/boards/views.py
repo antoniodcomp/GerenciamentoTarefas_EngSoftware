@@ -159,6 +159,11 @@ class TarefaViewSet(viewsets.ModelViewSet):
         if self.action in ['update', 'partial_update']:
             return TarefaUpdateSerializer
         return TarefaCreateSerializer
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        if instance.status == 'CONCLUIDA':
+            instance.subtarefas.update(status='CONCLUIDA')
     
    
 @extend_schema_view(
@@ -196,11 +201,6 @@ class TarefaViewSet(viewsets.ModelViewSet):
         responses={204: None}
     )
 )
-
-    def perform_update(self, serializer):
-        instance = serializer.save()
-        if instance.status == 'CONCLUIDA':
-            instance.subtarefas.update(status='CONCLUIDA')
 
 class SubtarefaViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsDonoOuParticipanteDoProjeto]
