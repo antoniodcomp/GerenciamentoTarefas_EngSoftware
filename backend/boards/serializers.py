@@ -51,10 +51,19 @@ class TarefaResumoSerializer(serializers.ModelSerializer):
     description = serializers.CharField(source='descricao', read_only=True)
     status = serializers.CharField(read_only=True)
     deadline = serializers.DateTimeField(source='data_fim', read_only=True)
+    participantes = serializers.SerializerMethodField()
     
     class Meta:
         model = Tarefa
-        fields = ['id', 'name', 'description', 'status', 'deadline']
+        fields = ['id', 'name', 'description', 'status', 'deadline', 'participantes']
+
+    def get_participantes(self, obj):
+        return [
+            {
+                'id': u.id,
+                'name': u.nome
+            } for u in obj.participantes.all()
+        ]
 
 class TarefaCreateSerializer(serializers.ModelSerializer):
         name = serializers.CharField(source='nome')
@@ -112,12 +121,13 @@ class TarefaUpdateSerializer(serializers.ModelSerializer):
 
 class SubtarefaResumoSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='nome', read_only=True)
+    description = serializers.CharField(source='descricao', read_only=True)
     status = serializers.CharField(read_only=True)
     deadline = serializers.DateTimeField(source='data_fim', read_only=True)
 
     class Meta:
         model = Subtarefa
-        fields = ['id', 'name', 'status', 'deadline']
+        fields = ['id', 'name', 'description', 'status', 'deadline']
 
 class SubtarefaCreateSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='nome')

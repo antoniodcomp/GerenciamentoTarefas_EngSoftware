@@ -31,8 +31,9 @@ const SubtaskList = ({ subtasks, onStatusChange }) => {
     <ul className="list-none p-0 m-0">
       {subtasks.map(subtask => (
         <li key={subtask.id} className="bg-white border border-gray-200 rounded-lg p-4 mb-3 flex justify-between items-center">
-          <div>
+          <div className="flex-1 pr-4">
             <h4 className="text-gray-900 font-bold text-base mb-1 m-0">{subtask.name}</h4>
+            <p className="text-gray-600 text-sm mb-2">{subtask.description || <span className="italic opacity-60">Sem descrição informada.</span>}</p>
             <div className="text-sm text-gray-500 flex items-center gap-1">
               <Calendar size={14} />
               Prazo: {formatDate(subtask.deadline)}

@@ -144,7 +144,7 @@ function TelaDashboard() {
             <div className="bg-blue-600 h-full transition-all duration-300" style={{ width: `${data.progress_percentage}%` }}></div>
           </div>
           <div className="flex justify-between text-sm text-gray-500">
-            <span>Início: <strong className="text-gray-700">{formatDate(data.start_date)}</strong></span>
+            <span>Início: <strong className="text-gray-700">{formatDate(data.startline)}</strong></span>
             <span>Prazo: <strong className="text-gray-700">{formatDate(data.deadline)}</strong></span>
           </div>
         </section>
