@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+.venv_linux/
+pip-log.txt
+pip-delete-this-directory.txt
+.env
+db.sqlite3
+.pytest_cache/

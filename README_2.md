@@ -29,11 +29,30 @@ Este é um sistema de gerenciamento de projetos e tarefas projetado para equipes
 
 ## Como Executar o Projeto Localmente
 
-### Pre-requisitos
+### Executando com Docker (Recomendado)
+
+O projeto conta com um ambiente Docker configurado. Para iniciar toda a aplicacao (Frontend, Backend e Banco de Dados PostgreSQL) de forma automatizada:
+
+1. Certifique-se de ter o **Docker** e o **Docker Compose** instalados em sua maquina.
+2. Na raiz do projeto, execute o comando:
+   ```bash
+   docker compose up --build
+   ```
+3. Acesse as aplicacoes:
+   - **Frontend:** http://localhost:5173
+   - **Backend (API):** http://localhost:8000
+
+---
+
+### Executando Manualmente
+
+Caso prefira rodar sem o Docker, siga os passos abaixo.
+
+#### Pre-requisitos
 - Python 3.10 ou superior
 - Node.js 18 ou superior
 
-### Configurando o Backend
+#### Configurando o Backend
 1. Navegue ate a pasta do backend:
    cd backend
 2. Crie um ambiente virtual (venv):
