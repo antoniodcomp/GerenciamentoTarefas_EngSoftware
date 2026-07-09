@@ -6,6 +6,7 @@ from .models import Projeto, Tarefa, Subtarefa, Anexo, ComentarioTarefa
 from .serializers import ProjetoSerializer, ProjetoDashboardSerializer, TarefaCreateSerializer, SubtarefaCreateSerializer, TarefaDetailSerializer, AnexoSerializer, ComentarioTarefaSerializer, TarefaUpdateSerializer, SubtarefaUpdateSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.db.models import Q
+from rest_framework.exceptions import PermissionDenied
 from .permissions import IsDonoOuParticipanteDoProjeto
 from .service import projeto_service, task_service
 from drf_spectacular.utils import extend_schema, extend_schema_view
@@ -186,6 +187,43 @@ class SubtarefaViewSet(viewsets.ModelViewSet):
         # Delega a criação da subtarefa para a camada service
         task_service.TaskService.processar_criacao_subtarefa(serializer, self.request.user)
         
+
+@extend_schema_view(
+    list=extend_schema(
+        summary="Listar anexos",
+        description="Retorna todos os anexos das tarefas nos projetos em que o usuário está envolvido.",
+        responses={200: AnexoSerializer(many=True)}
+    ),
+    create=extend_schema(
+        summary="Fazer upload de um anexo",
+        description="Envia um arquivo para ser anexado a uma tarefa específica. Requer formato multipart/form-data.",
+        request=AnexoSerializer,
+        responses={201: AnexoSerializer, 403: None}
+    ),
+    retrieve=extend_schema(
+        summary="Detalhar um anexo",
+        description="Retorna as informações de registro de um anexo específico através do ID.",
+        responses={200: AnexoSerializer}
+    ),
+    update=extend_schema(
+        summary="Atualizar completamente um anexo",
+        description="Substitui o arquivo ou os dados do anexo existente.",
+        request=AnexoSerializer,
+        responses={200: AnexoSerializer}
+    ),
+    partial_update=extend_schema(
+        summary="Atualizar parcialmente um anexo",
+        description="Modifica campos específicos do anexo (como alterar apenas o nome ou reordenar).",
+        request=AnexoSerializer,
+        responses={200: AnexoSerializer}
+    ),
+    destroy=extend_schema(
+        summary="Excluir um anexo",
+        description="Remove permanentemente o arquivo e o registro do anexo do sistema.",
+        responses={204: None}
+    )
+)
+
 class AnexoViewSet(viewsets.ModelViewSet):
     serializer_class = AnexoSerializer
     permission_classes = [IsAuthenticated, IsDonoOuParticipanteDoProjeto]
@@ -200,9 +238,6 @@ class AnexoViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         # Delega a verificação de regras para o TaskService
         task_service.TaskService.processar_anexo(serializer, self.request.user)
-
-
-
 
 
 @extend_schema_view(
