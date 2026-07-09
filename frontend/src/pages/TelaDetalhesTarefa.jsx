@@ -268,14 +268,7 @@ function TelaDetalhesTarefa() {
                         const isCompleted = subtask.status === 'CONCLUIDA';
                         return (
                           <div key={subtask.id} className="flex items-center justify-between p-4 bg-white border border-gray-200/60 rounded-2xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] hover:shadow-md transition-all group">
-                            <div className="flex items-center gap-4 flex-1">
-                              <button 
-                                type="button"
-                                onClick={() => handleSubtaskStatusChange(subtask.id, isCompleted ? 'PENDENTE' : 'CONCLUIDA')}
-                                className={`text-gray-300 hover:text-emerald-500 transition-colors cursor-pointer bg-transparent border-none p-0 flex items-center justify-center ${isCompleted ? 'text-emerald-500' : ''}`}
-                              >
-                                {isCompleted ? <CheckCircle2 size={24} className="fill-emerald-100" /> : <Circle size={24} />}
-                              </button>
+                            <div className="flex items-center gap-4 flex-1 pl-2">
                               <div>
                                 <h4 className={`text-[15px] font-bold transition-all m-0 ${isCompleted ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{subtask.name}</h4>
                                 {subtask.description && (
@@ -284,9 +277,19 @@ function TelaDetalhesTarefa() {
                               </div>
                             </div>
                             <div className="flex items-center gap-4">
-                              <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${getStatusBadge(subtask.status)} tracking-wide`}>
-                                {subtask.status === 'EM_ANDAMENTO' ? 'EM ANDAMENTO' : subtask.status === 'CONCLUIDA' ? 'CONCLUÍDA' : 'PENDENTE'}
-                              </span>
+                              <div className="relative">
+                                <select 
+                                  value={subtask.status} 
+                                  onChange={(e) => handleSubtaskStatusChange(subtask.id, e.target.value)}
+                                  className={`appearance-none text-[11px] font-bold px-3 py-1 pr-6 rounded-full border outline-none cursor-pointer transition-all bg-white ${getStatusBadge(subtask.status)} tracking-wide`}
+                                  style={{ WebkitAppearance: 'none', MozAppearance: 'none' }}
+                                >
+                                  <option value="PENDENTE">PENDENTE</option>
+                                  <option value="EM_ANDAMENTO">EM ANDAMENTO</option>
+                                  <option value="CONCLUIDA">CONCLUÍDA</option>
+                                </select>
+                                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none opacity-60" />
+                              </div>
                               <button type="button" className="text-gray-400 hover:text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity p-1 cursor-pointer bg-transparent border-none">
                                 <MoreHorizontal size={18} />
                               </button>
