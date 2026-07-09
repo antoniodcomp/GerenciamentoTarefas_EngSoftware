@@ -93,13 +93,21 @@ class ProjetoSerializer(serializers.ModelSerializer):
             )
         return data
 
+    def create(self, validated_data):
+        participantes = validated_data.pop('participantes', [])
+        projeto = Projeto.objects.create(**validated_data)
+        if participantes:
+            projeto.participantes.set(participantes)
+        return projeto
 
-
-
-
-
-
-
+    def update(self, instance, validated_data):
+        participantes = validated_data.pop('participantes', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        if participantes is not None:
+            instance.participantes.set(participantes)
+        return instance
 
 @extend_schema_serializer(
     component_name="TarefaResumo",
