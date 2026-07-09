@@ -60,28 +60,6 @@ class TarefaViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         # Delega a criação da tarefa para a classe service
         task_service.TaskService.processar_criacao_tarefa(serializer, self.request.user)
-
-        """
-        Talvez possa ser excluído pois se refere a notificações
-        """
-        #     # 3. RF41 (Notificações): Gerar notificação para outros gestores
-        #     # Coleta quem precisa ser avisado (Dono + Participantes, excluindo quem acabou de criar a tarefa)
-        # responsaveis = list(projeto.participantes.all())
-        # if projeto.dono not in responsaveis:
-        #     responsaveis.append(projeto.dono)
-
-        # for responsavel in responsaveis:
-        #     if responsavel != self.request.user:
-        #             # Aqui você grava na tabela de notificações ou dispara um Email.
-        #             # Exemplo hipotético se você tiver um model de Notificação:
-        #             """
-        #             Notificacao.objects.create(
-        #                 usuario=responsavel,
-        #                 titulo=f"Nova Tarefa no Projeto {projeto.nome}",
-        #                 mensagem=f"O gestor {self.request.user.username} criou a tarefa '{tarefa.nome}'",
-        #                 tarefa_id=tarefa.id
-        #             )
-        #             """
         
     def get_serializer_class(self):
         if self.action == 'retrieve':
@@ -107,19 +85,7 @@ class SubtarefaViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         # Delega a criação da subtarefa para a camada service
         task_service.TaskService.processar_criacao_subtarefa(serializer, self.request.user)
-
-        """
-        Como notificações foi retirado do projeto, podemos excluir
-        """
-        #     # RF42: Notificações
-        # responsaveis = list(projeto.participantes.all())
-        # if projeto.dono not in responsaveis:
-        #     responsaveis.append(projeto.dono)
-
-        # for responsavel in responsaveis:
-        #     if responsavel != self.request.user:
-        #         print(f"[NOTIFICAÇÃO] Para {responsavel.username}: Nova subtarefa '{subtarefa.nome}' criada na tarefa '{tarefa.nome}' do projeto'{projeto.nome}'")
-
+        
 class AnexoViewSet(viewsets.ModelViewSet):
     serializer_class = AnexoSerializer
     permission_classes = [IsAuthenticated, IsDonoOuParticipanteDoProjeto]
