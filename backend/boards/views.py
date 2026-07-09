@@ -112,6 +112,11 @@ class TarefaViewSet(viewsets.ModelViewSet):
             return TarefaUpdateSerializer
         return TarefaCreateSerializer
 
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        if instance.status == 'CONCLUIDA':
+            instance.subtarefas.update(status='CONCLUIDA')
+
 class SubtarefaViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsDonoOuParticipanteDoProjeto]
 
