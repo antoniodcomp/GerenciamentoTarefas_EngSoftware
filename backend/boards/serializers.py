@@ -18,10 +18,23 @@ class ProjetoSerializer(serializers.ModelSerializer):
             many=True, 
             required=False
         )
+    progress_percentage = serializers.SerializerMethodField()
+    total_tasks = serializers.SerializerMethodField()
 
     class Meta:
         model = Projeto
-        fields = ['id', 'name', 'description', 'startline', 'deadline', 'owner', 'created_at', 'participantes']
+        fields = ['id', 'name', 'description', 'startline', 'deadline', 'owner', 'created_at', 'participantes', 'progress_percentage', 'total_tasks']
+
+    def get_progress_percentage(self, obj):
+        tarefas = obj.tarefas.all()
+        total_tasks = tarefas.count()
+        if total_tasks == 0:
+            return 0
+        completed_tasks = tarefas.filter(status='CONCLUIDA').count()
+        return round((completed_tasks / total_tasks * 100), 2)
+        
+    def get_total_tasks(self, obj):
+        return obj.tarefas.count()
 
     def validate_deadline(self, value):
         # Validação do prazo final impedindo datas anteriores ao dia atual
@@ -51,10 +64,19 @@ class TarefaResumoSerializer(serializers.ModelSerializer):
     description = serializers.CharField(source='descricao', read_only=True)
     status = serializers.CharField(read_only=True)
     deadline = serializers.DateTimeField(source='data_fim', read_only=True)
+    participantes = serializers.SerializerMethodField()
     
     class Meta:
         model = Tarefa
-        fields = ['id', 'name', 'description', 'status', 'deadline']
+        fields = ['id', 'name', 'description', 'status', 'deadline', 'participantes']
+
+    def get_participantes(self, obj):
+        return [
+            {
+                'id': u.id,
+                'name': u.nome
+            } for u in obj.participantes.all()
+        ]
 
 class TarefaCreateSerializer(serializers.ModelSerializer):
         name = serializers.CharField(source='nome')
@@ -112,12 +134,13 @@ class TarefaUpdateSerializer(serializers.ModelSerializer):
 
 class SubtarefaResumoSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='nome', read_only=True)
+    description = serializers.CharField(source='descricao', read_only=True)
     status = serializers.CharField(read_only=True)
     deadline = serializers.DateTimeField(source='data_fim', read_only=True)
 
     class Meta:
         model = Subtarefa
-        fields = ['id', 'name', 'status', 'deadline']
+        fields = ['id', 'name', 'description', 'status', 'deadline']
 
 class SubtarefaCreateSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='nome')

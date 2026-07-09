@@ -89,10 +89,10 @@ export default function ProjetoCard({ project }) {
         <span className="bg-[#16A34A] text-white rounded-full px-2.5 py-0.5 text-[11px] uppercase tracking-wide font-bold">
           Ativo
         </span>
-        <span className="font-bold text-[#0A0A0A] text-sm">65%</span>
+        <span className="font-bold text-[#0A0A0A] text-sm">{Math.round(project.progress_percentage || 0)}%</span>
       </div>
       <div className="bg-[#E5E7EB] rounded-full h-1.5 w-full mb-6 overflow-hidden">
-        <div className="bg-[#2563EB] h-full rounded-full" style={{ width: '65%' }}></div>
+        <div className="bg-[#2563EB] h-full rounded-full transition-all duration-300" style={{ width: `${project.progress_percentage || 0}%` }}></div>
       </div>
 
       {/* Dates */}
@@ -114,7 +114,7 @@ export default function ProjetoCard({ project }) {
           <span>{project.participantes?.length || 0} membros</span>
         </div>
         <div className="text-sm text-[#6B7280] font-medium">
-          -/- tarefas
+          {project.total_tasks || 0} tarefas
         </div>
       </div>
     </div>
