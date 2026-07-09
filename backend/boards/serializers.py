@@ -2,9 +2,43 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from datetime import date
 from .models import Projeto, Tarefa, Subtarefa, Anexo, ComentarioTarefa
+from drf_spectacular.utils import extend_schema_serializer, OpenApiExample
 
 User = get_user_model()
 
+
+@extend_schema_serializer(
+    component_name="Projeto",
+    examples=[
+        OpenApiExample(
+            name="Exemplo de Criação de Projeto",
+            description="Payload padrão enviado pelo frontend para registrar um novo projeto com participantes.",
+            value={
+                "name": "Novo Sistema de Vendas",
+                "description": "Desenvolvimento do módulo de checkout e gateway de pagamento.",
+                "startline": "2026-07-10T09:00:00Z",
+                "deadline": "2026-12-31T18:00:00Z",
+                "participantes": [2, 5, 8]
+            },
+            request_only=True,
+        ),
+        OpenApiExample(
+            name="Exemplo de Resposta de Projeto",
+            description="Dados retornados pela API após a criação ou leitura de um projeto.",
+            value={
+                "id": 1,
+                "name": "Novo Sistema de Vendas",
+                "description": "Desenvolvimento do módulo de checkout e gateway de pagamento.",
+                "startline": "2026-07-10T09:00:00Z",
+                "deadline": "2026-12-31T18:00:00Z",
+                "owner": 1,
+                "created_at": "2026-07-08T14:30:22Z",
+                "participantes": [2, 5, 8]
+            },
+            response_only=True,
+        )
+    ]
+)
 
 class ProjetoSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='nome')
@@ -46,6 +80,30 @@ class ProjetoSerializer(serializers.ModelSerializer):
             )
         return data
 
+
+
+
+
+
+
+
+
+@extend_schema_serializer(
+    component_name="TarefaResumo",
+    examples=[
+        OpenApiExample(
+            name="Exemplo de Resumo da Tarefa",
+            description="Formato simplificado retornado em listagens ou dashboards.",
+            value={
+                "id": 10,
+                "name": "Configurar Pipeline de CI/CD",
+                "status": "Em Andamento",
+                "deadline": "2026-08-15T23:59:59Z"
+            },
+            response_only=True
+        )
+    ]
+)
 class TarefaResumoSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='nome', read_only=True)
     status = serializers.CharField(read_only=True)
@@ -55,6 +113,30 @@ class TarefaResumoSerializer(serializers.ModelSerializer):
         model = Tarefa
         fields = ['id', 'name', 'status', 'deadline']
 
+
+
+
+
+
+
+
+
+@extend_schema_serializer(
+    component_name="TarefaResumo",
+    examples=[
+        OpenApiExample(
+            name="Exemplo de Resumo da Tarefa",
+            description="Formato simplificado retornado em listagens ou dashboards.",
+            value={
+                "id": 10,
+                "name": "Configurar Pipeline de CI/CD",
+                "status": "Em Andamento",
+                "deadline": "2026-08-15T23:59:59Z"
+            },
+            response_only=True
+        )
+    ]
+)
 class TarefaCreateSerializer(serializers.ModelSerializer):
         name = serializers.CharField(source='nome')
         description = serializers.CharField(source='descricao')
@@ -87,6 +169,41 @@ class TarefaCreateSerializer(serializers.ModelSerializer):
                 )
             return data
 
+
+
+
+
+
+@extend_schema_serializer(
+    component_name="TarefaAtualizar",
+    examples=[
+        OpenApiExample(
+            name="Exemplo de Atualização de Tarefa (PUT/PATCH)",
+            description="Payload enviado pelo frontend para modificar os dados de uma tarefa existente ou alterar seu status.",
+            value={
+                "name": "Criar endpoints de autenticação - Refatorado",
+                "description": "Desenvolver login, logout e aplicar segurança extra com Refresh Tokens.",
+                "startline": "2026-07-15T08:00:00Z",
+                "deadline": "2026-07-25T18:00:00Z",
+                "status": "Em Andamento"
+            },
+            request_only=True
+        ),
+        OpenApiExample(
+            name="Exemplo de Resposta após Atualização",
+            description="Dados retornados pela API confirmando as alterações salvas.",
+            value={
+                "id": 11,
+                "name": "Criar endpoints de autenticação - Refatorado",
+                "description": "Desenvolver login, logout e aplicar segurança extra com Refresh Tokens.",
+                "startline": "2026-07-15T08:00:00Z",
+                "deadline": "2026-07-25T18:00:00Z",
+                "status": "Em Andamento"
+            },
+            response_only=True
+        )
+    ]
+)
 class TarefaUpdateSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='nome')
     description = serializers.CharField(source='descricao')
@@ -108,6 +225,29 @@ class TarefaUpdateSerializer(serializers.ModelSerializer):
             )
         return data
 
+
+
+
+
+
+
+
+@extend_schema_serializer(
+    component_name="SubtarefaResumo",
+    examples=[
+        OpenApiExample(
+            name="Exemplo de Resumo da Subtarefa",
+            description="JSON simplificado retornado em listagens de subatividades dentro de uma tarefa.",
+            value={
+                "id": 150,
+                "name": "Criar migration da tabela de anexos",
+                "status": "Concluído",
+                "deadline": "2026-07-12T12:00:00Z"
+            },
+            response_only=True
+        )
+    ]
+)
 class SubtarefaResumoSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='nome', read_only=True)
     status = serializers.CharField(read_only=True)
@@ -117,6 +257,42 @@ class SubtarefaResumoSerializer(serializers.ModelSerializer):
         model = Subtarefa
         fields = ['id', 'name', 'status', 'deadline']
 
+
+
+
+
+
+
+
+@extend_schema_serializer(
+    component_name="SubtarefaCriar",
+    examples=[
+        OpenApiExample(
+            name="Exemplo de Criação de Subtarefa",
+            description="Payload padrão para criar uma nova subtarefa atrelada a uma tarefa pai.",
+            value={
+                "name": "Escrever testes unitários do serializer",
+                "description": "Cobrir validações de data de início e término.",
+                "deadline": "2026-07-20T18:00:00Z",
+                "task": 11
+            },
+            request_only=True
+        ),
+        OpenApiExample(
+            name="Exemplo de Resposta após Criação",
+            description="Estrutura de dados devolvida pela API após salvar a subtarefa com sucesso.",
+            value={
+                "id": 151,
+                "name": "Escrever testes unitários do serializer",
+                "description": "Cobrir validações de data de início e término.",
+                "deadline": "2026-07-20T18:00:00Z",
+                "task": 11,
+                "status": "Pendente"
+            },
+            response_only=True
+        )
+    ]
+)
 class SubtarefaCreateSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='nome')
     description = serializers.CharField(source='descricao', required=False, allow_blank=True, allow_null=True)
@@ -138,6 +314,37 @@ class SubtarefaCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("O prazo final da subtarefa é obrigatório.")
         return value
 
+
+
+
+@extend_schema_serializer(
+    component_name="Atualizar Subtarefa",
+    examples=[
+        OpenApiExample(
+            name="Exemplo de Atualização de Subtarefa (PUT/PATCH)",
+            description="Payload enviado para modificar os dados ou alterar o status de conclusão de uma subtarefa.",
+            value={
+                "name": "Escrever testes unitários do serializer - Finalizado",
+                "description": "Todos os cenários de validação cronológica foram validados com sucesso.",
+                "deadline": "2026-07-22T15:00:00Z",
+                "status": "Concluído"
+            },
+            request_only=True
+        ),
+        OpenApiExample(
+            name="Exemplo de Resposta após Atualização",
+            description="Estrutura de dados retornada pela API confirmando que as alterações foram salvas.",
+            value={
+                "id": 151,
+                "name": "Escrever testes unitários do serializer - Finalizado",
+                "description": "Todos os cenários de validação cronológica foram validados com sucesso.",
+                "deadline": "2026-07-22T15:00:00Z",
+                "status": "Concluído"
+            },
+            response_only=True
+        )
+    ]
+)
 class SubtarefaUpdateSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='nome')
     description = serializers.CharField(source='descricao')
@@ -148,6 +355,34 @@ class SubtarefaUpdateSerializer(serializers.ModelSerializer):
         model = Subtarefa
         fields = ['id', 'name', 'description', 'deadline', 'status']
 
+
+
+
+
+
+
+
+
+
+@extend_schema_serializer(
+    component_name="Anexo",
+    examples=[
+        OpenApiExample(
+            name="Resposta de Sucesso",
+            description="Exemplo simplificado do retorno após o upload.",
+            value={
+                "id": 1,
+                "file_name": "documento.pdf",
+                "file_path": "http://localhost:8000/media/anexos/documento.pdf",
+                "date_time_upload": "2026-07-08T19:41:00Z",
+                "user": 2,
+                "user_name": "dev_usuario",
+                "task": 5
+            },
+            response_only=True
+        )
+    ]
+)
 class AnexoSerializer(serializers.ModelSerializer):
     file_name = serializers.CharField(source='nome_arquivo')
     file_path = serializers.FileField(source='caminho_arquivo')
@@ -173,6 +408,42 @@ class AnexoSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(f"Formato de arquivo não suportado. Formatos válidos: {', '.join(valid_extensions)}.")
         return value
 
+
+
+
+
+
+
+
+
+
+@extend_schema_serializer(
+    component_name="ComentarioTarefa",
+    examples=[
+        OpenApiExample(
+            name="Exemplo de Criação de Comentário",
+            description="Payload padrão enviado para adicionar um novo comentário a uma tarefa.",
+            value={
+                "texto": "Já finalizei a estrutura do banco, vou iniciar os testes amanhã.",
+                "task": 12
+            },
+            request_only=True
+        ),
+        OpenApiExample(
+            name="Exemplo de Resposta de Comentário",
+            description="Estrutura retornada contendo os dados do autor gerados pelo servidor.",
+            value={
+                "id": 89,
+                "texto": "Já finalizei a estrutura do banco, vou iniciar os testes amanhã.",
+                "date_time": "2026-07-08T19:45:00Z",
+                "user": 3,
+                "user_name": "joao_silva",
+                "task": 12
+            },
+            response_only=True
+        )
+    ]
+)
 class ComentarioTarefaSerializer(serializers.ModelSerializer):
     text = serializers.CharField(source='texto')
     date = serializers.DateTimeField(source='data', read_only=True)
@@ -188,7 +459,40 @@ class ComentarioTarefaSerializer(serializers.ModelSerializer):
         if not value or value.strip() == "":
             raise serializers.ValidationError("O texto do comentário é obrigatório.")
         return value
-    
+
+
+
+
+
+
+@extend_schema_serializer(
+    component_name="TarefaDetalhes",
+    examples=[
+        OpenApiExample(
+            name="Exemplo de Detalhes da Tarefa",
+            description="Payload completo retornado no endpoint de retrieve, trazendo dados aninhados.",
+            value={
+                "id": 12,
+                "name": "Configurar Pipeline de CI/CD",
+                "description": "Configurar GitHub Actions para rodar testes automáticos e fazer deploy.",
+                "startline": "2026-07-10T08:00:00Z",
+                "deadline": "2026-07-15T18:00:00Z",
+                "status": "Em Andamento",
+                "project": 1,
+                "subtasks": [
+                    {"id": 150, "name": "Criar chaves SSH", "status": "Concluído", "deadline": "2026-07-11T12:00:00Z"}
+                ],
+                "comments": [
+                    {"id": 89, "texto": "Servidor da AWS configurado.", "user_name": "joao_silva"}
+                ],
+                "attachments": [
+                    {"id": 45, "file_name": "diagrama_arquitetura.png", "file_path": "http://..."}
+                ]
+            },
+            response_only=True
+        )
+    ]
+)
 class TarefaDetailSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='nome')
     description = serializers.CharField(source='descricao')
@@ -203,6 +507,39 @@ class TarefaDetailSerializer(serializers.ModelSerializer):
         model = Tarefa
         fields = ['id', 'name', 'description', 'deadline', 'project', 'status', 'subtasks', 'files', 'comments']
 
+
+
+
+
+@extend_schema_serializer(
+    component_name="ProjetoDashboard",
+    examples=[
+        OpenApiExample(
+            name="Resposta do Dashboard",
+            description="Exemplo simplificado dos indicadores do projeto e suas tarefas.",
+            value={
+                "id": 1,
+                "name": "Expansão da Infraestrutura",
+                "description": "Migração de servidores locais para nuvem.",
+                "startline": "2026-01-10T08:00:00Z",
+                "deadline": "2026-12-25T18:00:00Z",
+                "total_tasks": 10,
+                "pending_tasks": 3,
+                "in_progress_tasks": 5,
+                "completed_tasks": 2,
+                "progress_percentage": 20.0,
+                "delayed_tasks": [
+                    {"id": 4, "name": "Comprar licenças", "status": "Pendente", "deadline": "2026-06-01T18:00:00Z"}
+                ],
+                "all_tasks": [
+                    {"id": 4, "name": "Comprar licenças", "status": "Pendente", "deadline": "2026-06-01T18:00:00Z"},
+                    {"id": 5, "name": "Configurar VPC", "status": "Em Andamento", "deadline": "2026-08-30T18:00:00Z"}
+                ]
+            },
+            response_only=True
+        )
+    ]
+)
 class ProjetoDashboardSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='nome', read_only=True)
     description = serializers.CharField(source='descricao', read_only=True)
