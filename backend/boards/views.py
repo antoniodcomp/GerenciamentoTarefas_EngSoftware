@@ -29,6 +29,12 @@ class ProjetoViewSet(viewsets.ModelViewSet):
             Q(dono=user) | Q(participantes=user)
         ).distinct().order_by('-criado_em')
 
+    def destroy(self, request, *args, **kwargs):
+        # Apenas gestores ou administradores podem excluir projetos
+        if request.user.tipo not in ['GESTOR', 'ADMINISTRADOR']:
+            raise PermissionDenied("Apenas gestores ou administradores podem excluir projetos.")
+        return super().destroy(request, *args, **kwargs)
+
     @action(detail=True, methods=['get'])
     def dashboard(self, request, pk=None):
         """
