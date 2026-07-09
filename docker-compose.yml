@@ -6,7 +6,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 12345
     ports:
-      - "5433:5432"
+      - "${DB_EXTERNAL_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -23,7 +23,7 @@ services:
     volumes:
       - ./backend:/app
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-8000}:8000"
     environment:
       - DB_NAME=gerenciador_db
       - DB_USER=postgres
@@ -40,7 +40,7 @@ services:
       - ./frontend:/app
       - /app/node_modules # Evita sobrescrever o node_modules do container pelo volume local
     ports:
-      - "5173:5173"
+      - "${FRONTEND_PORT:-5173}:5173"
     environment:
       - CHOKIDAR_USEPOLLING=true # Ajuda com hot-reload em alguns ambientes
 
