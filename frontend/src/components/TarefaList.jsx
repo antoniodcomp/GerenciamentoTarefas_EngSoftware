@@ -56,6 +56,7 @@ export const TarefaList = ({ projetoId, searchTerm = '' }) => {
         <TarefaCard 
           key={tarefa.id} 
           tarefa={tarefa} 
+          projetoId={projetoId}
           onClick={() => navigate(`/projetos/${projetoId}/tarefas/${tarefa.id}`)}
         />
       ))}
