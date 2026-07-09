@@ -8,6 +8,7 @@ import {
   useUpdateTaskStatus, 
   useUpdateSubtaskStatus 
 } from '../hooks/useTarefas';
+import { usePerfil } from '../hooks/usePerfil';
 import { ArrowLeft, MoreHorizontal, CheckCircle2, Circle, Paperclip, Calendar, Clock, ChevronDown, Plus, X, Upload, FileText } from 'lucide-react';
 
 const formatDate = (dateString) => {
@@ -147,6 +148,10 @@ function TelaDetalhesTarefa() {
   const { mutateAsync: createComment, isPending: commenting } = useCreateTaskComment();
   const { mutate: updateTaskStatus } = useUpdateTaskStatus();
   const { mutate: updateSubtaskStatus } = useUpdateSubtaskStatus();
+  const { data: usuario } = usePerfil();
+
+  const tipoUsuario = usuario?.role || usuario?.tipo;
+  const podeAdicionarSubtarefa = tipoUsuario === 'GESTOR' || tipoUsuario === 'ADMINISTRADOR';
 
   const [activeTab, setActiveTab] = useState('subtasks');
   const [showSubtaskModal, setShowSubtaskModal] = useState(false);
@@ -288,15 +293,17 @@ function TelaDetalhesTarefa() {
                 {/* Subtasks Tab */}
                 {activeTab === 'subtasks' && (
                   <div>
-                    <div className="flex justify-end mb-4">
-                      <button 
-                        type="button"
-                        onClick={() => setShowSubtaskModal(true)} 
-                        className="bg-slate-900 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-800 transition-all shadow-md hover:shadow-lg flex items-center gap-2 cursor-pointer border-none"
-                      >
-                        <Plus size={16} /> Nova Subtarefa
-                      </button>
-                    </div>
+                    {podeAdicionarSubtarefa && (
+                      <div className="flex justify-end mb-4">
+                        <button 
+                          type="button"
+                          onClick={() => setShowSubtaskModal(true)} 
+                          className="bg-slate-900 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-800 transition-all shadow-md hover:shadow-lg flex items-center gap-2 cursor-pointer border-none"
+                        >
+                          <Plus size={16} /> Nova Subtarefa
+                        </button>
+                      </div>
+                    )}
                     {(!task.subtasks || task.subtasks.length === 0) && (
                       <div className="text-center p-8 bg-white/50 border border-dashed border-gray-300 rounded-2xl text-gray-500 text-sm">
                         Nenhuma subtarefa criada ainda.
