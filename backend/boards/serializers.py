@@ -523,14 +523,24 @@ class TarefaDetailSerializer(serializers.ModelSerializer):
     description = serializers.CharField(source='descricao')
     deadline = serializers.DateTimeField(source='data_fim')
     project = serializers.PrimaryKeyRelatedField(queryset=Projeto.objects.all(), source='projeto')
+    project_name = serializers.CharField(source='projeto.nome', read_only=True)
     status = serializers.CharField(read_only=True)
     subtasks = SubtarefaResumoSerializer(source='subtarefas', many=True, read_only=True)
     files = AnexoSerializer(source='anexos', many=True, read_only=True)
     comments = ComentarioTarefaSerializer(source='comentarios', many=True, read_only=True)
+    participantes = serializers.SerializerMethodField()
 
     class Meta:
         model = Tarefa
-        fields = ['id', 'name', 'description', 'deadline', 'project', 'status', 'subtasks', 'files', 'comments']
+        fields = ['id', 'name', 'description', 'deadline', 'project', 'project_name', 'status', 'subtasks', 'files', 'comments', 'participantes']
+
+    def get_participantes(self, obj):
+        return [
+            {
+                'id': u.id,
+                'name': u.nome
+            } for u in obj.participantes.all()
+        ]
 
 
 
