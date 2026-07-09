@@ -18,10 +18,23 @@ class ProjetoSerializer(serializers.ModelSerializer):
             many=True, 
             required=False
         )
+    progress_percentage = serializers.SerializerMethodField()
+    total_tasks = serializers.SerializerMethodField()
 
     class Meta:
         model = Projeto
-        fields = ['id', 'name', 'description', 'startline', 'deadline', 'owner', 'created_at', 'participantes']
+        fields = ['id', 'name', 'description', 'startline', 'deadline', 'owner', 'created_at', 'participantes', 'progress_percentage', 'total_tasks']
+
+    def get_progress_percentage(self, obj):
+        tarefas = obj.tarefas.all()
+        total_tasks = tarefas.count()
+        if total_tasks == 0:
+            return 0
+        completed_tasks = tarefas.filter(status='CONCLUIDA').count()
+        return round((completed_tasks / total_tasks * 100), 2)
+        
+    def get_total_tasks(self, obj):
+        return obj.tarefas.count()
 
     def validate_deadline(self, value):
         # Validação do prazo final impedindo datas anteriores ao dia atual
