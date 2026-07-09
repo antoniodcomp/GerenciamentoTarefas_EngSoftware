@@ -143,43 +143,65 @@ function TelaDashboard() {
           </div>
         </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Progresso do Projeto */}
-          <section className="bg-white/80 backdrop-blur-xl border border-gray-200/60 p-7 rounded-3xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] lg:col-span-2">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-bold text-slate-900 m-0">Progresso do Projeto</h3>
-              <span className="font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-full px-4 py-1.5 text-sm shadow-sm">{data.progress_percentage}%</span>
+          <section className="bg-white/80 backdrop-blur-xl border border-gray-200/60 p-8 rounded-3xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] lg:col-span-3 flex flex-col justify-center">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 gap-4">
+              <div>
+                <h3 className="text-xl font-black text-slate-900 m-0 mb-1 tracking-tight">Evolução do Projeto</h3>
+                <p className="text-gray-500 text-[14px] m-0 font-medium">Acompanhe o andamento geral das suas atividades</p>
+              </div>
+              <div className="text-left sm:text-right">
+                <span className="font-black text-4xl text-indigo-600 tracking-tighter block leading-none mb-1">{data.progress_percentage}%</span>
+                <span className="text-[13px] text-gray-500 font-bold uppercase tracking-wide">{data.completed_tasks} de {data.total_tasks} tarefas</span>
+              </div>
             </div>
-            <div className="bg-gray-100 rounded-full h-3 w-full overflow-hidden mb-6 shadow-inner">
-              <div className="bg-gradient-to-r from-indigo-500 to-purple-500 h-full transition-all duration-500 ease-out" style={{ width: `${data.progress_percentage}%` }}></div>
+            
+            <div className="bg-gray-100 rounded-full h-4 w-full overflow-hidden mb-8 shadow-inner">
+              <div className="bg-gradient-to-r from-indigo-500 to-purple-500 h-full transition-all duration-700 ease-out relative" style={{ width: `${data.progress_percentage}%` }}>
+                <div className="absolute top-0 left-0 right-0 bottom-0 bg-white/20"></div>
+              </div>
             </div>
-            <div className="flex justify-between text-[13px] text-gray-500 font-medium">
-              <span className="flex items-center gap-2"><CalendarIcon size={16} className="text-gray-400"/> Início: <strong className="text-slate-900">{formatDate(data.startline)}</strong></span>
-              <span className="flex items-center gap-2"><Clock size={16} className="text-gray-400"/> Prazo: <strong className="text-slate-900">{formatDate(data.deadline)}</strong></span>
+            
+            <div className="flex justify-between items-center bg-gray-50/80 p-5 rounded-2xl border border-gray-100">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-500 shadow-sm"><CalendarIcon size={20}/></div>
+                <div>
+                  <div className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Início</div>
+                  <div className="text-[15px] font-bold text-slate-900">{formatDate(data.startline)}</div>
+                </div>
+              </div>
+              <div className="hidden sm:block h-10 w-px bg-gray-200"></div>
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <div className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Prazo Final</div>
+                  <div className="text-[15px] font-bold text-slate-900">{formatDate(data.deadline)}</div>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-500 shadow-sm"><Clock size={20}/></div>
+              </div>
             </div>
           </section>
 
           {/* Tarefas Atrasadas */}
-          <section className="bg-white/80 backdrop-blur-xl border border-gray-200/60 p-7 rounded-3xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-2xl bg-red-50 flex items-center justify-center text-red-500">
-                <AlertTriangle size={20} />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 m-0">Tarefas Atrasadas</h3>
-            </div>
-            
+          <section className="bg-white/80 backdrop-blur-xl border border-gray-200/60 p-6 rounded-3xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] lg:col-span-1 flex flex-col justify-center items-center text-center relative overflow-hidden group">
             {data.delayed_tasks && data.delayed_tasks.length > 0 ? (
-              <div className="flex flex-col items-center justify-center h-32 text-center">
-                <p className="text-5xl font-extrabold text-red-600 m-0 mb-2">{data.delayed_tasks.length}</p>
-                <p className="text-gray-500 text-[15px] m-0 font-medium">tarefa(s) atrasada(s)</p>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-32 text-center">
-                <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center mb-3">
-                  <CheckCircle2 size={24} />
+              <>
+                <div className="absolute top-0 left-0 w-full h-1.5 bg-red-500"></div>
+                <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center text-red-500 mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <AlertTriangle size={32} />
                 </div>
-                <p className="text-gray-500 text-sm m-0">Nenhuma tarefa atrasada.</p>
-              </div>
+                <p className="text-6xl font-black text-slate-900 m-0 mb-2 tracking-tighter">{data.delayed_tasks.length}</p>
+                <p className="text-red-600 text-[13px] m-0 font-bold uppercase tracking-widest">Tarefas Atrasadas</p>
+              </>
+            ) : (
+              <>
+                <div className="absolute top-0 left-0 w-full h-1.5 bg-emerald-500"></div>
+                <div className="w-16 h-16 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500 mb-5 group-hover:scale-110 transition-transform duration-300">
+                  <CheckCircle2 size={32} />
+                </div>
+                <p className="text-[18px] font-black text-slate-900 m-0 mb-1 tracking-tight">Tudo em dia!</p>
+                <p className="text-gray-500 text-[14px] m-0 font-medium">Nenhuma tarefa atrasada.</p>
+              </>
             )}
           </section>
         </div>
