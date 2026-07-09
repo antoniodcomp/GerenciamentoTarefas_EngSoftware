@@ -111,7 +111,7 @@ class Anexo(models.Model):
         db_table = 'Anexo'
 
     def __str__(self):
-        return f"{self.nomeArquivo or 'Anexo'}"
+        return f"{self.nome_arquivo or 'Anexo'}"
 
 
 class ComentarioTarefa(models.Model):
