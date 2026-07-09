@@ -1,16 +1,15 @@
 import React from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Briefcase, LayoutDashboard, Bell, LogOut } from 'lucide-react';
+import { Briefcase, LayoutDashboard, Bell, LogOut, ChevronDown, ChevronRight, Folder } from 'lucide-react';
 import { usePerfil } from '../hooks/usePerfil';
+import { useProjetos } from '../hooks/useProjetos';
 
 function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { data: usuario } = usePerfil();
-
-  const navItems = [
-    { path: '/projetos', label: 'Projetos', icon: <Briefcase size={20} /> },
-  ];
+  const { data: projects = [] } = useProjetos();
+  const [isProjectsOpen, setIsProjectsOpen] = React.useState(true);
 
   const handleLogout = (e) => {
     e.preventDefault();
@@ -29,24 +28,51 @@ function Layout() {
             </div>
           </div>
 
-          <nav className="px-4 py-6 space-y-2">
-            {navItems.map((item) => {
-              const isActive = location.pathname.startsWith(item.path);
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors font-medium text-sm ${
-                    isActive
-                      ? 'bg-[#0A0A0A] text-white'
-                      : 'text-[#6B7280] hover:bg-gray-100 hover:text-[#0A0A0A]'
-                  }`}
-                >
-                  {item.icon}
-                  {item.label}
-                </Link>
-              );
-            })}
+          <nav className="px-4 py-6 space-y-2 flex-1 overflow-y-auto">
+            <Link
+              to="/projetos"
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors font-medium text-sm ${
+                location.pathname === '/projetos'
+                  ? 'bg-[#0A0A0A] text-white'
+                  : 'text-[#6B7280] hover:bg-gray-100 hover:text-[#0A0A0A]'
+              }`}
+            >
+              <Briefcase size={20} />
+              <span className="flex-1">Projetos</span>
+              <button 
+                onClick={(e) => { 
+                  e.preventDefault(); 
+                  setIsProjectsOpen(!isProjectsOpen); 
+                }}
+                className={`p-0.5 rounded-md transition-colors ${location.pathname === '/projetos' ? 'hover:bg-gray-800' : 'hover:bg-gray-200'}`}
+              >
+                {isProjectsOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+              </button>
+            </Link>
+
+            {isProjectsOpen && projects.length > 0 && (
+              <div className="pl-5 space-y-1 mt-1 border-l-2 border-gray-100 ml-4">
+                {projects.map((project) => {
+                  const projectPath = `/projetos/${project.id}/dashboard`;
+                  const isActive = location.pathname.startsWith(`/projetos/${project.id}`);
+                  return (
+                    <Link
+                      key={project.id}
+                      to={projectPath}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-[13px] ${
+                        isActive
+                          ? 'bg-indigo-50 text-indigo-700 font-semibold'
+                          : 'text-[#6B7280] hover:bg-gray-100 hover:text-[#0A0A0A]'
+                      }`}
+                      title={project.name}
+                    >
+                      <Folder size={14} className={`shrink-0 ${isActive ? "text-indigo-500" : "text-gray-400"}`} />
+                      <span className="truncate">{project.name}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </nav>
         </div>
 
