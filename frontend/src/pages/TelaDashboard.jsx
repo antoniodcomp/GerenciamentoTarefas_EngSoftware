@@ -4,6 +4,7 @@ import { useProjectDashboard, useCreateTarefa, useUpdateTaskStatus } from '../ho
 import { usePerfil } from '../hooks/usePerfil';
 import { TarefaList } from '../components/TarefaList';
 import AddMembroModal from '../components/AddMembroModal';
+import ProjetoModal from '../components/ProjetoModal';
 import { ArrowLeft, LayoutDashboard, ListTodo, AlertTriangle, CheckCircle2, Clock, ChevronDown, Search, Plus, Filter, X, Calendar as CalendarIcon, Users } from 'lucide-react';
 
 const getStatusBadge = (status) => {
@@ -39,6 +40,7 @@ function TelaDashboard() {
   const [activeTab, setActiveTab] = useState('tarefas');
   const [isTaskModalOpen, setTaskModalOpen] = useState(false);
   const [isAddMembroModalOpen, setAddMembroModalOpen] = useState(false);
+  const [isEditProjectModalOpen, setIsEditProjectModalOpen] = useState(false);
   const [taskSearchTerm, setTaskSearchTerm] = useState('');
 
   const handleCreateTask = async (e) => {
@@ -110,7 +112,7 @@ function TelaDashboard() {
 
       <div className="max-w-6xl mx-auto px-6 py-10 space-y-8">
         {/* Header */}
-        <div className="flex justify-between items-start">
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
           <div className="flex gap-4 items-start">
             <button onClick={() => navigate('/projetos')} className="mt-1 p-2 text-gray-500 hover:bg-white/80 hover:text-slate-900 rounded-xl transition-colors cursor-pointer border-none bg-transparent">
               <ArrowLeft size={20} />
@@ -122,6 +124,14 @@ function TelaDashboard() {
               )}
             </div>
           </div>
+          {(tipoUsuario === 'GESTOR' || tipoUsuario === 'ADMINISTRADOR') && (
+            <button 
+              onClick={() => setIsEditProjectModalOpen(true)}
+              className="bg-white/80 backdrop-blur-xl border border-gray-200/60 text-slate-700 px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-white hover:text-slate-900 transition-all shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] cursor-pointer whitespace-nowrap"
+            >
+              Editar Projeto
+            </button>
+          )}
         </div>
 
         {/* Stats Row */}
@@ -409,11 +419,16 @@ function TelaDashboard() {
         isOpen={isAddMembroModalOpen} 
         onClose={() => setAddMembroModalOpen(false)} 
         projectId={id} 
-        currentParticipantes={data?.participantes || []} 
+        participantesAtuais={data.participantes}
+      />
+
+      <ProjetoModal 
+        isOpen={isEditProjectModalOpen} 
+        onClose={() => setIsEditProjectModalOpen(false)} 
+        projectToEdit={data} 
       />
     </div>
   );
 }
 
 export default TelaDashboard;
-
