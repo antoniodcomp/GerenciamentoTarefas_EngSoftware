@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getProjects, createProject, updateProject } from '../services/projectService';
+import { getProjects, createProject, updateProject, deleteProject } from '../services/projectService';
 
 export const useProjetos = () => {
   return useQuery({
@@ -29,4 +29,16 @@ export const useUpdateProjeto = () => {
       queryClient.invalidateQueries({ queryKey: ['projectDashboard'] });
     },
   });
+};
+
+export const useDeleteProjeto = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteProject,
+    onSuccess: () => {
+      console.log("Projeto excluido com sucesso");
+      queryClient.invalidateQueries({ queryKey:['projetos'] });
+    }
+  })
 };

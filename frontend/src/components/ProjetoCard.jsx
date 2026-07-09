@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Users, MoreVertical } from 'lucide-react';
+import { useDeleteProjeto } from '../hooks/useProjetos';
 
 const formatDate = (dateString) => {
   if (!dateString) return '-';
@@ -11,6 +12,33 @@ const formatDate = (dateString) => {
 
 export default function ProjetoCard({ project }) {
   const navigate = useNavigate();
+  const menuRef = useRef(null);
+  const [showMenu, setShowMenu] = useState(false);
+  const { mutate: deleteProjeto } = useDeleteProjeto();
+
+  const handleDeleteClick = (e) => {
+    e.stopPropagation();
+    setShowMenu(false);
+
+    const confirmDelete = window.confirm(`Tem certeza que deseja excluir o projeto "${project.name}"? Esta ação não pode ser desfeita.`);
+
+    if (confirmDelete) {
+      deleteProjeto(project.id);
+    }
+  };
+
+  useEffect(() => {                                                                                                                                               
+    const handleClickOutside = (event) => {                                                                                                                       
+      if (menuRef.current && !menuRef.current.contains(event.target)) {                                                                                           
+        setShowMenu(false);                                                                                                                                       
+      }                                                                                                                                                           
+    };                                                                                                                                                            
+                                                                                                                                                                  
+    document.addEventListener('mousedown', handleClickOutside);                                                                                                   
+    return () => {                                                                                                                                                
+      document.removeEventListener('mousedown', handleClickOutside);                                                                                              
+    };                                                                                                                                                            
+  }, []);
 
   return (
     <div 
@@ -20,12 +48,29 @@ export default function ProjetoCard({ project }) {
     >
       <div className="flex justify-between items-start mb-2">
         <h3 className="font-bold text-[#0A0A0A] text-lg line-clamp-1 flex-1 pr-2">{project.name}</h3>
-        <button 
-          onClick={(e) => { e.stopPropagation(); }} 
-          className="text-[#6B7280] hover:bg-gray-100 p-1 rounded-md transition-colors"
-        >
-          <MoreVertical size={20} />
-        </button>
+          <div className="relative" ref={menuRef}>
+              <button 
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  setShowMenu(!showMenu); 
+                }} 
+                className="text-[#6B7280] hover:bg-gray-100 p-1 rounded-md transition-colors"
+                title="Mais opções"
+              >
+                <MoreVertical size={20} />
+              </button>
+  
+              {showMenu && (
+                <div className="absolute right-0 mt-2 w-48 bg-white border border-[#E5E7EB] rounded-lg shadow-lg py-1 z-10">
+                  <button
+                    onClick={handleDeleteClick}
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors font-medium"
+                  >
+                    Excluir Projeto
+                  </button>
+                </div>
+              )}
+            </div>
       </div>
       
       <p className="text-[#6B7280] text-sm line-clamp-2 mb-6 min-h-[40px]">
