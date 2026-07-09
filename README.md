@@ -1,52 +1,98 @@
-# GerenciamentoTarefas_EngSoftware
+# Sistema de Gerenciamento de Tarefas
 
-# Prompt
-Atue como um Arquiteto de Software especialista em Python (Django) e ecossistema JavaScript (React).
-Estou desenvolvendo um gerenciador de projetos semelhante ao Trello. O backend será em Django e o frontend em React. Preciso planejar a arquitetura de comunicação da aplicação focando em duas tecnologias: REST API (usando Django REST Framework) e WebSockets (usando Django Channels).
-Por favor, forneça uma análise detalhada estruturada nos seguintes tópicos:
+## Sobre o Projeto
+Este é um sistema de gerenciamento de projetos e tarefas projetado para equipes de desenvolvimento e engenharia de software. A plataforma foca em produtividade, hierarquia de acesso, e uma interface moderna para acompanhamento de atividades diárias.
 
-Visão Geral no Contexto do Trello: Como cada uma dessas tecnologias se encaixa no ciclo de vida do usuário (ex: carregar o quadro inicial vs. atualizar a posição de um card em tempo real para múltiplos usuários).
-Prós e Contras Detalhados: Apresente as vantagens e desvantagens de usar REST API e WebSockets especificamente para este cenário de gestão de quadros, considerando performance, escalabilidade, facilidade de desenvolvimento e consumo de recursos do servidor.
-Arquitetura Híbrida (A Abordagem Ideal): Como combinar o melhor dos dois mundos? Explique o fluxo ideal onde o REST faz o "trabalho pesado" de CRUD e o WebSocket lida com o real-time.
-Exemplo Prático de Código (Conceitual): >    * Um endpoint REST simples em Django (DRF) para criar um card.
-Um Consumer em Django Channels para transmitir a movimentação de um card para os outros membros do quadro.
-Como o React deve consumir/escutar esses dois fluxos.
-Evite respostas genéricas. Foque nas dores de manter o estado do frontend (React) sincronizado com o banco de dados via Django em um ambiente colaborativo.
+## Tecnologias Utilizadas
 
-# Estrutura do projeto
-```text
-gerenciador-projetos/
-├── .github/                      # Configurações do GitHub (Pipelines CI/CD, templates)
-│
-├── backend/                      # Aplicação Django (API REST + Channels)
-│   ├── core/                     # Configurações principais (settings, urls globais, asgi/wsgi)
-│   ├── boards/                   # App Django: Domínio de Quadros, Listas e Cards
-│   │   ├── consumers.py          # Lógica do WebSocket (real-time)
-│   │   ├── models.py             # Modelos de banco de dados (Board, List, Card)
-│   │   ├── routing.py            # Roteamento de URLs do WebSocket
-│   │   ├── serializers.py        # Serializadores do DRF
-│   │   ├── urls.py               # Rotas REST do app
-│   │   └── views.py              # ViewSets (REST API)
-│   ├── users/                    # App Django: Gestão de usuários e autenticação
-│   ├── manage.py                 # CLI principal do Django
-│   ├── requirements.txt          # Dependências do Python
-│   └── .env.example              # Exemplo de variáveis de ambiente do backend
-│
-├── frontend/                     # Aplicação React (SPA)
-│   ├── public/                   # Arquivos estáticos
-│   ├── src/
-│   │   ├── components/           # Componentes visuais reutilizáveis
-│   │   ├── contexts/             # Contextos globais (Auth, WebSocket)
-│   │   ├── pages/                # Telas principais da aplicação (ex: BoardView)
-│   │   ├── services/             # Integração com backend (api.js para REST, websocket.js para WS)
-│   │   ├── store/                # Gerenciamento de estado global (Zustand/Redux)
-│   │   ├── App.jsx               # Ponto de entrada das rotas React
-│   │   └── main.jsx              # Ponto de montagem da aplicação
-│   ├── package.json              # Dependências do ecossistema Node.js
-│   ├── vite.config.js            # Configuração do bundler (Vite)
-│   └── .env.example              # Exemplo de variáveis de ambiente do frontend
-│
-├── docker-compose.yml            # Orquestração de containers (PostgreSQL, Redis, Backend, Frontend)
-├── .gitignore                    # Arquivos e pastas ignorados pelo Git
-└── README.md                     # Documentação principal do projeto
+### Frontend
+- React.js
+- Vite (ferramenta de build e servidor de desenvolvimento local)
+- Tailwind CSS (estilizacao)
+- Lucide React (icones)
+- React Router DOM (navegacao)
+- React Query (gerenciamento de estados assincronos e cache)
+
+### Backend
+- Python
+- Django
+- Django REST Framework (DRF)
+- Simple JWT (autenticacao baseada em tokens)
+- drf-spectacular (documentacao da API via Swagger)
+
+## Funcionalidades Principais
+- Autenticacao e Autorizacao: Suporte a login seguro utilizando tokens JWT e controle baseado em papeis de acesso (Administrador, Gestor, Desenvolvedor/Comum).
+- Gestao de Projetos: Criacao, edicao e exclusao de projetos (restrito a gestores e administradores). Listagem inteligente de projetos no menu lateral com base no nivel de permissao do usuario.
+- Gestao de Tarefas e Subtarefas: Vinculo hierarquico. Modificacoes de status de tarefas pai propagam em cascata para concluir automaticamente suas respectivas subtarefas.
+- Dashboards de Projetos: Telas completas e integradas para acompanhamento de status, percentual de conclusao e verificacao imediata de tarefas atrasadas.
+- Interface Moderna: Design utilizando "Glassmorphism", totalmente responsivo e com componentes padronizados.
+
+## Como Executar o Projeto Localmente
+
+### Executando com Docker (Recomendado)
+
+O projeto conta com um ambiente Docker configurado. Para iniciar toda a aplicacao (Frontend, Backend e Banco de Dados PostgreSQL) de forma automatizada:
+
+1. Certifique-se de ter o **Docker** e o **Docker Compose** instalados em sua maquina.
+2. Na raiz do projeto, execute o comando:
+   ```bash
+   docker compose up --build
+   ```
+3. Acesse as aplicacoes:
+   - **Frontend:** http://localhost:5173
+   - **Backend (API):** http://localhost:8000
+
+---
+
+### Executando Manualmente
+
+Caso prefira rodar sem o Docker, siga os passos abaixo.
+
+#### Pre-requisitos
+- Python 3.10 ou superior
+- Node.js 18 ou superior
+
+#### Configurando o Backend
+1. Navegue ate a pasta do backend:
+   cd backend
+2. Crie um ambiente virtual (venv):
+   python -m venv venv
+3. Ative o ambiente virtual:
+   - Linux/Mac: source venv/bin/activate
+   - Windows: venv\Scripts\activate
+4. Instale as dependencias necessarias:
+   pip install -r requirements.txt
+5. Aplique as migracoes do banco de dados (se for a primeira vez):
+   python manage.py migrate
+6. Inicie o servidor de desenvolvimento:
+   python manage.py runserver
+
+O backend estara acessivel em http://localhost:8000/
+
+### Configurando o Frontend
+1. Em um novo terminal, navegue ate a pasta do frontend:
+   cd frontend
+2. Instale as dependencias via NPM:
+   npm install
+3. Inicie o servidor de desenvolvimento Vite:
+   npm run dev
+
+O frontend estara acessivel na porta padrao (normalmente http://localhost:5173/).
+
+## Testes Automatizados
+O projeto conta com suites de testes unitarios (APITestCase do Django) que validam as regras de negocio principais, incluindo a criacao, permissao de edicao, e a conclusao de tarefas em cascata.
+
+Para executar os testes, assegure-se de que o ambiente virtual esteja ativo na raiz da pasta backend e execute:
+python manage.py test boards
+
+## Observações Importantes
+
+### Resolução de Conflitos de Porta (Docker)
+O `docker-compose.yml` está configurado para permitir a alteração dinâmica das portas, caso as portas padrão (8000, 5173, 5432) já estejam em uso na sua máquina. 
+Para alterar as portas, basta criar um arquivo `.env` na raiz do projeto contendo as variáveis:
+```env
+FRONTEND_PORT=3000
+BACKEND_PORT=8001
+DB_EXTERNAL_PORT=5434
 ```
+Ao rodar `docker compose up --build`, o Docker lerá automaticamente essas variáveis e exporá os serviços nas portas definidas, sem a necessidade de alterar o código-fonte.
