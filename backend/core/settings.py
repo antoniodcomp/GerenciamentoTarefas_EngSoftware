@@ -25,7 +25,8 @@ INSTALLED_APPS = [
     'corsheaders',  # Permite requisições de outras portas (CORS)
     'rest_framework',
     'users',
-    'boards.apps.BoardsConfig'
+    'boards.apps.BoardsConfig',
+    "drf_spectacular"
 ]
 
 MIDDLEWARE = [
@@ -95,6 +96,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.Usuario'
 
 REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
@@ -103,6 +105,13 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Minha API",
+    "DESCRIPTION": "Documentação da API",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
 }
 
 MEDIA_URL = '/media/'
