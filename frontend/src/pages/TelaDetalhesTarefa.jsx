@@ -66,7 +66,7 @@ const AttachmentList = ({ files }) => {
       {files.map(anexo => (
         <li key={anexo.id} className="bg-white border border-gray-200 rounded-lg p-4 mb-3 flex justify-between items-center">
           <div>
-            <a href={`http://localhost:8000${anexo.file_path}`} target="_blank" rel="noreferrer" className="text-blue-600 font-bold hover:underline flex items-center gap-2 mb-1 text-sm">
+            <a href={`${anexo.file_path}`} target="_blank" rel="noreferrer" className="text-blue-600 font-bold hover:underline flex items-center gap-2 mb-1 text-sm">
               <FileText size={16} />
               {anexo.file_name}
             </a>
