@@ -8,6 +8,16 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from django.db.models import Q
 from .permissions import IsDonoOuParticipanteDoProjeto
 from .service import projeto_service, task_service
+from drf_spectacular.utils import extend_schema, extend_schema_view
+
+@extend_schema(
+    tags=["Projetos"],
+    summary="Gerenciar projetos",
+    description=(
+            "Retorna indicadores agregados (total, pendentes, em andamento, concluídas, "
+            "percentual de progresso e tarefas atrasadas) para o projeto especificado."
+        )
+)
 
 class ProjetoViewSet(viewsets.ModelViewSet):
     # queryset = Projeto.objects.all().order_by('-criado_em')
@@ -28,6 +38,12 @@ class ProjetoViewSet(viewsets.ModelViewSet):
             Q(dono=user) | Q(participantes=user)
         ).distinct().order_by('-criado_em')
 
+    def destroy(self, request, *args, **kwargs):
+        # Apenas gestores ou administradores podem excluir projetos
+        if request.user.tipo not in ['GESTOR', 'ADMINISTRADOR']:
+            raise PermissionDenied("Apenas gestores ou administradores podem excluir projetos.")
+        return super().destroy(request, *args, **kwargs)
+
     @action(detail=True, methods=['get'])
     def dashboard(self, request, pk=None):
         """
@@ -45,6 +61,43 @@ class ProjetoViewSet(viewsets.ModelViewSet):
         
         # O UC10 indica que o painel de indicadores é retornado ao visualizar o projeto em detalhes.
         return Response(serializer.data)
+    
+
+@extend_schema_view(
+    list=extend_schema(
+        summary="Listar tarefas",
+        description="Retorna todas as tarefas dos projetos em que o usuário autenticado é o dono ou um participante.",
+        responses={200: TarefaCreateSerializer(many=True)}
+    ),
+    create=extend_schema(
+        summary="Criar uma nova tarefa",
+        description="Cria uma tarefa vinculada a um projeto. Apenas o dono ou participantes do projeto podem criar tarefas.",
+        request=TarefaCreateSerializer,
+        responses={201: TarefaCreateSerializer, 403: None}
+    ),
+    retrieve=extend_schema(
+        summary="Detalhar uma tarefa",
+        description="Retorna os detalhes completos de uma tarefa específica baseada no ID.",
+        responses={200: TarefaDetailSerializer, 404: None}
+    ),
+    update=extend_schema(
+        summary="Atualizar completamente uma tarefa",
+        description="Substitui todos os dados de uma tarefa existente.",
+        request=TarefaUpdateSerializer,
+        responses={200: TarefaUpdateSerializer}
+    ),
+    partial_update=extend_schema(
+        summary="Atualizar parcialmente uma tarefa",
+        description="Modifica apenas os campos enviados na requisição da tarefa.",
+        request=TarefaUpdateSerializer,
+        responses={200: TarefaUpdateSerializer}
+    ),
+    destroy=extend_schema(
+        summary="Excluir uma tarefa",
+        description="Remove permanentemente uma tarefa do sistema.",
+        responses={204: None}
+    )
+)
 
 class TarefaViewSet(viewsets.ModelViewSet):
     serializer_class = TarefaCreateSerializer
@@ -67,6 +120,48 @@ class TarefaViewSet(viewsets.ModelViewSet):
         if self.action in ['update', 'partial_update']:
             return TarefaUpdateSerializer
         return TarefaCreateSerializer
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        if instance.status == 'CONCLUIDA':
+            instance.subtarefas.update(status='CONCLUIDA')
+    
+   
+@extend_schema_view(
+    list=extend_schema(
+        summary="Listar subtarefas",
+        description="Retorna todas as subtarefas vinculadas às tarefas dos projetos em que o usuário está envolvido.",
+        responses={200: SubtarefaCreateSerializer(many=True)}
+    ),
+    create=extend_schema(
+        summary="Criar uma nova subtarefa",
+        description="Cria uma subtarefa atrelada a uma tarefa específica. O usuário precisa ser membro do projeto pai.",
+        request=SubtarefaCreateSerializer,
+        responses={201: SubtarefaCreateSerializer, 403: None}
+    ),
+    retrieve=extend_schema(
+        summary="Detalhar uma subtarefa",
+        description="Retorna os dados de uma subtarefa específica por ID.",
+        responses={200: SubtarefaCreateSerializer}
+    ),
+    update=extend_schema(
+        summary="Atualizar completamente uma subtarefa",
+        description="Substitui os dados da subtarefa. Geralmente restringe a alteração da tarefa pai.",
+        request=SubtarefaUpdateSerializer,
+        responses={200: SubtarefaUpdateSerializer}
+    ),
+    partial_update=extend_schema(
+        summary="Atualizar parcialmente uma subtarefa",
+        description="Modifica apenas os campos enviados no corpo da requisição.",
+        request=SubtarefaUpdateSerializer,
+        responses={200: SubtarefaUpdateSerializer}
+    ),
+    destroy=extend_schema(
+        summary="Excluir uma subtarefa",
+        description="Remove permanentemente a subtarefa do sistema.",
+        responses={204: None}
+    )
+)
 
 class SubtarefaViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsDonoOuParticipanteDoProjeto]
@@ -100,6 +195,47 @@ class AnexoViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         # Delega a verificação de regras para o TaskService
         task_service.TaskService.processar_anexo(serializer, self.request.user)
+
+
+
+
+
+@extend_schema_view(
+    list=extend_schema(
+        summary="Listar comentários de tarefas",
+        description="Retorna as mensagens e discussões de tarefas pertencentes aos projetos do usuário autenticado.",
+        responses={200: ComentarioTarefaSerializer(many=True)}
+    ),
+    create=extend_schema(
+        summary="Adicionar um comentário",
+        description="Cria uma nova mensagem em uma tarefa específica. Permitido para donos e participantes do projeto.",
+        request=ComentarioTarefaSerializer,
+        responses={201: ComentarioTarefaSerializer, 403: None}
+    ),
+    retrieve=extend_schema(
+        summary="Detalhar um comentário",
+        description="Busca o conteúdo e metadados de um comentário específico pelo ID.",
+        responses={200: ComentarioTarefaSerializer}
+    ),
+    update=extend_schema(
+        summary="Atualizar completamente um comentário",
+        description="Substitui o texto e dados de um comentário existente.",
+        request=ComentarioTarefaSerializer,
+        responses={200: ComentarioTarefaSerializer}
+    ),
+    partial_update=extend_schema(
+        summary="Atualizar parcialmente um comentário",
+        description="Edita campos específicos de um comentário (como corrigir apenas o texto da mensagem).",
+        request=ComentarioTarefaSerializer,
+        responses={200: ComentarioTarefaSerializer}
+    ),
+    destroy=extend_schema(
+        summary="Excluir um comentário",
+        description="Remove permanentemente o comentário do histórico da tarefa.",
+        responses={204: None}
+    )
+)
+
 
 class ComentarioTarefaViewSet(viewsets.ModelViewSet):
     serializer_class = ComentarioTarefaSerializer

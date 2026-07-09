@@ -8,7 +8,8 @@ import {
   useUpdateTaskStatus, 
   useUpdateSubtaskStatus 
 } from '../hooks/useTarefas';
-import { ArrowLeft, Plus, Paperclip, MessageSquare, Calendar, FileText, Upload, ChevronDown } from 'lucide-react';
+import { usePerfil } from '../hooks/usePerfil';
+import { ArrowLeft, MoreHorizontal, CheckCircle2, Circle, Paperclip, Calendar, Clock, ChevronDown, Plus, X, Upload, FileText } from 'lucide-react';
 
 const formatDate = (dateString) => {
   if (!dateString) return '-';
@@ -17,43 +18,74 @@ const formatDate = (dateString) => {
   return utcDate.toLocaleDateString('pt-BR');
 };
 
-const getTaskBadgeClass = (status) => {
-  if (status === 'CONCLUIDA') return 'bg-emerald-100 text-emerald-800';
-  if (status === 'EM_ANDAMENTO') return 'bg-blue-100 text-blue-800';
-  return 'bg-amber-100 text-amber-800';
+const getStatusBadge = (status) => {
+  if (status === 'CONCLUIDA') return 'bg-emerald-100/80 text-emerald-700 border-emerald-200';
+  if (status === 'EM_ANDAMENTO') return 'bg-blue-100/80 text-blue-700 border-blue-200';
+  return 'bg-gray-100/80 text-gray-700 border-gray-200';
 };
 
-const SubtaskList = ({ subtasks, onStatusChange }) => {
-  if (!subtasks || subtasks.length === 0) {
-    return <p className="text-gray-500 text-sm italic mb-0">Nenhuma subtarefa cadastrada.</p>;
-  }
+const SubtaskModal = ({ isOpen, onClose, onSubmit, submitting, newSubtask, setNewSubtask, errorMsg }) => {
+  if (!isOpen) return null;
   return (
-    <ul className="list-none p-0 m-0">
-      {subtasks.map(subtask => (
-        <li key={subtask.id} className="bg-white border border-gray-200 rounded-lg p-4 mb-3 flex justify-between items-center">
-          <div>
-            <h4 className="text-gray-900 font-bold text-base mb-1 m-0">{subtask.name}</h4>
-            <div className="text-sm text-gray-500 flex items-center gap-1">
-              <Calendar size={14} />
-              Prazo: {formatDate(subtask.deadline)}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+          <h2 className="text-lg font-semibold text-gray-900 m-0">Nova Subtarefa</h2>
+          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer border-none bg-transparent">
+            <X size={20} />
+          </button>
+        </div>
+        <div className="p-6">
+          {errorMsg && <div className="text-red-600 bg-red-50 p-3 rounded-xl mb-4 text-sm">{errorMsg}</div>}
+          <form onSubmit={onSubmit} className="space-y-4 m-0">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Título</label>
+              <input 
+                type="text" 
+                value={newSubtask.name} 
+                onChange={e => setNewSubtask({...newSubtask, name: e.target.value})} 
+                className="w-full rounded-xl border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm focus:border-slate-500 focus:ring-1 focus:ring-slate-500 transition-all outline-none border box-border" 
+                required 
+              />
             </div>
-          </div>
-          <div className="relative inline-block">
-            <select 
-              value={subtask.status} 
-              onChange={(e) => onStatusChange(subtask.id, e.target.value)}
-              className={`rounded-full pl-3 pr-7 py-0.5 text-xs font-semibold cursor-pointer border-none outline-none text-left appearance-none ${getTaskBadgeClass(subtask.status)}`}
-              style={{ WebkitAppearance: 'none', MozAppearance: 'none' }}
-            >
-              <option value="PENDENTE" className="text-gray-900 bg-white">PENDENTE</option>
-              <option value="EM_ANDAMENTO" className="text-gray-900 bg-white">EM ANDAMENTO</option>
-              <option value="CONCLUIDA" className="text-gray-900 bg-white">CONCLUÍDA</option>
-            </select>
-            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-current pointer-events-none opacity-70" />
-          </div>
-        </li>
-      ))}
-    </ul>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+              <textarea 
+                value={newSubtask.description} 
+                onChange={e => setNewSubtask({...newSubtask, description: e.target.value})} 
+                className="w-full rounded-xl border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm focus:border-slate-500 focus:ring-1 focus:ring-slate-500 transition-all outline-none border box-border min-h-[80px]" 
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Prazo Final</label>
+              <input 
+                type="datetime-local" 
+                value={newSubtask.deadline} 
+                onChange={e => setNewSubtask({...newSubtask, deadline: e.target.value})} 
+                className="w-full rounded-xl border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm focus:border-slate-500 focus:ring-1 focus:ring-slate-500 transition-all outline-none border box-border" 
+                required 
+              />
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <button 
+                type="button" 
+                onClick={onClose} 
+                className="px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors cursor-pointer bg-white"
+              >
+                Cancelar
+              </button>
+              <button 
+                type="submit" 
+                disabled={submitting} 
+                className="px-4 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-medium hover:bg-slate-800 transition-all disabled:opacity-50 cursor-pointer border-none"
+              >
+                {submitting ? 'Salvando...' : 'Salvar Subtarefa'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -78,26 +110,31 @@ const AttachmentList = ({ files }) => {
   );
 };
 
-const CommentList = ({ comments }) => {
-  if (!comments || comments.length === 0) {
-    return <p className="text-gray-500 text-sm italic mb-5">Nenhum comentário nesta tarefa.</p>;
-  }
+const PillSwitcher = ({ activeTab, setActiveTab, counts }) => {
   return (
-    <ul className="list-none p-0 m-0 mb-4">
-      {comments.map(comentario => (
-        <li key={comentario.id} className="bg-white border border-gray-200 rounded-lg p-4 mb-3">
-          <div className="mb-2 text-gray-900 font-bold text-sm flex items-center gap-2">
-            {comentario.user_name || 'Usuário'}
-            <span className="font-normal text-xs text-gray-500">
-              {new Date(comentario.date).toLocaleString('pt-BR')}
-            </span>
-          </div>
-          <div className="text-gray-500 text-sm leading-relaxed whitespace-pre-wrap">
-            {comentario.text}
-          </div>
-        </li>
-      ))}
-    </ul>
+    <div className="inline-flex bg-gray-100/80 backdrop-blur p-1 rounded-xl mb-6 shadow-inner">
+      <button 
+        type="button"
+        onClick={() => setActiveTab('subtasks')}
+        className={`px-5 py-2 text-sm font-medium rounded-lg transition-all border-none cursor-pointer ${activeTab === 'subtasks' ? 'bg-white text-slate-900 shadow-sm' : 'bg-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'}`}
+      >
+        Subtarefas <span className="ml-1.5 text-xs px-2 py-0.5 rounded-full bg-gray-200/60 font-semibold">{counts.subtasks}</span>
+      </button>
+      <button 
+        type="button"
+        onClick={() => setActiveTab('comments')}
+        className={`px-5 py-2 text-sm font-medium rounded-lg transition-all border-none cursor-pointer ${activeTab === 'comments' ? 'bg-white text-slate-900 shadow-sm' : 'bg-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'}`}
+      >
+        Comentários <span className="ml-1.5 text-xs px-2 py-0.5 rounded-full bg-gray-200/60 font-semibold">{counts.comments}</span>
+      </button>
+      <button 
+        type="button"
+        onClick={() => setActiveTab('attachments')}
+        className={`px-5 py-2 text-sm font-medium rounded-lg transition-all border-none cursor-pointer ${activeTab === 'attachments' ? 'bg-white text-slate-900 shadow-sm' : 'bg-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'}`}
+      >
+        Anexos <span className="ml-1.5 text-xs px-2 py-0.5 rounded-full bg-gray-200/60 font-semibold">{counts.attachments}</span>
+      </button>
+    </div>
   );
 };
 
@@ -111,14 +148,16 @@ function TelaDetalhesTarefa() {
   const { mutateAsync: createComment, isPending: commenting } = useCreateTaskComment();
   const { mutate: updateTaskStatus } = useUpdateTaskStatus();
   const { mutate: updateSubtaskStatus } = useUpdateSubtaskStatus();
+  const { data: usuario } = usePerfil();
 
-  const [showSubtaskForm, setShowSubtaskForm] = useState(false);
-  const [newSubtask, setNewSubtask] = useState({ name: '', description: '', deadline: '' });
+  const tipoUsuario = usuario?.role || usuario?.tipo;
+  const podeAdicionarSubtarefa = tipoUsuario === 'GESTOR' || tipoUsuario === 'ADMINISTRADOR';
+
+  const [activeTab, setActiveTab] = useState('subtasks');
+  const [showSubtaskModal, setShowSubtaskModal] = useState(false);
+  const [newSubtask, setNewSubtask] = useState({ name: '', description: '', start_date: '', deadline: '' });
   const [errorMsg, setErrorMsg] = useState('');
-
-  const [selectedFile, setSelectedFile] = useState(null);
   const [uploadError, setUploadError] = useState('');
-
   const [newComment, setNewComment] = useState('');
   const [commentError, setCommentError] = useState('');
 
@@ -132,10 +171,10 @@ function TelaDetalhesTarefa() {
         deadline: newSubtask.deadline,
         task: taskId
       });
-      setShowSubtaskForm(false);
-      setNewSubtask({ name: '', description: '', deadline: '' });
+      setShowSubtaskModal(false);
+      setNewSubtask({ name: '', description: '', start_date: '', deadline: '' });
     } catch (error) {
-      if (error.response && error.response.data) {
+      if (error.response?.data) {
         setErrorMsg(Object.values(error.response.data).flat().join(', '));
       } else {
         setErrorMsg('Erro ao criar subtarefa. Verifique os dados e tente novamente.');
@@ -143,51 +182,32 @@ function TelaDetalhesTarefa() {
     }
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
+  const handleFileUploadDirect = async (file) => {
     if (!file) return;
-
     if (file.size > 5 * 1024 * 1024) {
       setUploadError('O arquivo selecionado excede o limite de 5MB permitido.');
-      setSelectedFile(null);
-      e.target.value = null;
       return;
     }
-
     const allowedExtensions = ['pdf', 'jpg', 'jpeg', 'png', 'txt', 'doc', 'docx'];
     const ext = file.name.split('.').pop().toLowerCase();
     if (!allowedExtensions.includes(ext)) {
       setUploadError(`Formato não suportado. Os formatos aceitos são: ${allowedExtensions.join(', ')}.`);
-      setSelectedFile(null);
-      e.target.value = null;
       return;
     }
 
-    setUploadError('');
-    setSelectedFile(file);
-  };
-
-  const handleFileUpload = async (e) => {
-    e.preventDefault();
-    if (!selectedFile) return;
-    setUploadError('');
-
     const formData = new FormData();
-    formData.append('file_path', selectedFile);
-    formData.append('file_name', selectedFile.name);
+    formData.append('file_path', file);
+    formData.append('file_name', file.name);
     formData.append('task', taskId);
 
     try {
+      setUploadError('');
       await uploadAttachment(formData);
-      setSelectedFile(null);
-      const fileInput = document.getElementById('file-upload-input');
-      if (fileInput) fileInput.value = '';
     } catch (error) {
-      if (error.response && error.response.data) {
-         const errors = Object.values(error.response.data).flat();
-         setUploadError(errors.join(', '));
+      if (error.response?.data) {
+         setUploadError(Object.values(error.response.data).flat().join(', '));
       } else {
-         setUploadError('Erro inesperado ao anexar o arquivo. Tente novamente.');
+         setUploadError('Erro inesperado ao anexar o arquivo.');
       }
     }
   };
@@ -196,17 +216,12 @@ function TelaDetalhesTarefa() {
     e.preventDefault();
     if (!newComment.trim()) return;
     setCommentError('');
-
     try {
-      await createComment({
-        text: newComment,
-        task: taskId
-      });
+      await createComment({ text: newComment, task: taskId });
       setNewComment('');
     } catch (error) {
-      if (error.response && error.response.data) {
-         const errors = Object.values(error.response.data).flat();
-         setCommentError(errors.join(', '));
+      if (error.response?.data) {
+         setCommentError(Object.values(error.response.data).flat().join(', '));
       } else {
          setCommentError('Erro ao enviar o comentário. Tente novamente.');
       }
@@ -225,185 +240,266 @@ function TelaDetalhesTarefa() {
     });
   };
 
-  if (isLoading) return <div className="bg-gray-50 min-h-screen p-8 text-center text-gray-500 text-sm">Carregando Tarefa...</div>;
-  if (isError || !task) return <div className="bg-gray-50 min-h-screen p-8 text-center text-red-500 text-sm">Erro ao carregar a tarefa.</div>;
+  if (isLoading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-gray-500">Carregando Tarefa...</div>;
+  if (isError || !task) return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-red-500">Erro ao carregar a tarefa.</div>;
 
   return (
-    <div className="bg-gray-50 min-h-screen p-8">
-      <div className="max-w-4xl mx-auto text-left">
-        <button 
-          onClick={() => navigate(`/projetos/${projectId}/dashboard`)} 
-          className="flex items-center gap-2 px-4 py-2 mb-6 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors cursor-pointer"
-        >
-          <ArrowLeft size={16} />
-          Voltar ao Dashboard
-        </button>
+    <div className="min-h-screen bg-[#F8FAFC] relative overflow-hidden font-sans">
+      {/* Decorative background for premium aesthetics */}
+      <div className="absolute top-0 left-0 w-full h-[300px] bg-gradient-to-b from-indigo-50/70 to-transparent -z-10"></div>
+      <div className="absolute -top-[200px] -right-[200px] w-[600px] h-[600px] rounded-full bg-blue-100/30 blur-[80px] -z-10"></div>
+      
+      <div className="max-w-6xl mx-auto px-6 py-10">
         
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-          <div className="flex justify-between items-start flex-wrap gap-4 mb-8">
-            <h1 className="text-gray-900 font-bold text-3xl m-0">{task.name}</h1>
-            <div className="relative inline-block">
-              <select 
-                value={task.status} 
-                onChange={handleTaskStatusChange}
-                className={`rounded-full pl-4 pr-8 py-1 text-sm font-semibold cursor-pointer border-none outline-none appearance-none ${getTaskBadgeClass(task.status)}`}
-                style={{ WebkitAppearance: 'none', MozAppearance: 'none' }}
-              >
-                <option value="PENDENTE" className="text-gray-900 bg-white">PENDENTE</option>
-                <option value="EM_ANDAMENTO" className="text-gray-900 bg-white">EM ANDAMENTO</option>
-                <option value="CONCLUIDA" className="text-gray-900 bg-white">CONCLUÍDA</option>
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-current pointer-events-none opacity-70" />
-            </div>
-          </div>
-          
-          <div className="mb-8">
-            <h3 className="text-gray-900 font-bold text-lg border-b border-gray-200 pb-2 mb-4 m-0">Descrição da Tarefa</h3>
-            <p className="text-gray-500 text-sm leading-relaxed whitespace-pre-wrap m-0">
-              {task.description || <i className="text-gray-400">Nenhuma descrição detalhada foi fornecida para esta tarefa.</i>}
-            </p>
-          </div>
-          
-          <div className="mb-8">
-            <h3 className="text-gray-900 font-bold text-lg border-b border-gray-200 pb-2 mb-4 m-0">Prazos e Informações</h3>
-            <p className="text-gray-500 text-sm flex items-center gap-2 m-0">
-              <Calendar size={16} className="text-gray-400" />
-              <strong className="text-gray-900">Prazo Final:</strong> {formatDate(task.deadline)}
-            </p>
-          </div>
-
-          {/* --- Seção de Subtarefas --- */}
-          <div className="mb-10">
-            <div className="flex justify-between items-center border-b border-gray-200 pb-2 mb-4">
-              <h3 className="text-gray-900 font-bold text-lg m-0 flex items-center gap-2">
-                Subtarefas
-              </h3>
-              <button 
-                onClick={() => setShowSubtaskForm(!showSubtaskForm)}
-                className="bg-slate-900 text-white rounded-md px-3 py-1.5 hover:bg-slate-800 text-xs font-medium flex items-center gap-1 cursor-pointer"
-              >
-                {showSubtaskForm ? 'Cancelar' : <><Plus size={14} /> Nova Subtarefa</>}
-              </button>
-            </div>
-
-            {showSubtaskForm && (
-              <div className="mb-6 p-5 bg-gray-50 border border-gray-200 rounded-lg">
-                <h4 className="text-gray-900 font-bold text-base mb-4 m-0">Cadastrar Subtarefa</h4>
-                {errorMsg && <div className="text-red-600 bg-red-50 p-3 rounded-md mb-4 text-sm">{errorMsg}</div>}
-                <form onSubmit={handleCreateSubtask}>
-                  <div className="mb-4">
-                    <label className="block text-gray-900 font-bold text-sm mb-1.5">Título</label>
-                    <input 
-                      type="text" 
-                      value={newSubtask.name}
-                      onChange={(e) => setNewSubtask({...newSubtask, name: e.target.value})}
-                      className="w-full bg-white border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-slate-900 box-border"
-                      required
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label className="block text-gray-900 font-bold text-sm mb-1.5">Descrição</label>
-                    <textarea 
-                      value={newSubtask.description}
-                      onChange={(e) => setNewSubtask({...newSubtask, description: e.target.value})}
-                      className="w-full bg-white border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-900 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-slate-900 box-border"
-                    />
-                  </div>
-                  <div className="mb-5">
-                    <label className="block text-gray-900 font-bold text-sm mb-1.5">Prazo Final</label>
-                    <input 
-                      type="datetime-local" 
-                      value={newSubtask.deadline}
-                      onChange={(e) => setNewSubtask({...newSubtask, deadline: e.target.value})}
-                      className="w-full bg-white border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-slate-900 box-border"
-                      required
-                    />
-                  </div>
-                  <button 
-                    type="submit" 
-                    disabled={submittingSubtask}
-                    className={`bg-slate-900 text-white rounded-md px-4 py-2 text-sm font-medium border-none cursor-pointer ${submittingSubtask ? 'opacity-70 cursor-not-allowed' : 'hover:bg-slate-800'}`}
-                  >
-                    {submittingSubtask ? 'Salvando...' : 'Salvar Subtarefa'}
-                  </button>
-                </form>
-              </div>
-            )}
-
+        {/* Header */}
+        <div className="flex justify-between items-start mb-8">
+          <div className="flex gap-4 items-start">
+            <button 
+              onClick={() => navigate(`/projetos/${projectId}/dashboard`)} 
+              className="mt-1 p-2 text-gray-500 hover:bg-white/80 hover:text-slate-900 rounded-xl transition-colors cursor-pointer border-none bg-transparent"
+            >
+              <ArrowLeft size={20} />
+            </button>
             <div>
-              <SubtaskList subtasks={task.subtasks} onStatusChange={handleSubtaskStatusChange} />
+              <h1 className="text-3xl font-bold text-slate-900 mb-2 m-0 line-clamp-1">{task.name}</h1>
+              <p className="text-gray-600 text-[15px] m-0 line-clamp-2 max-w-2xl leading-relaxed">
+                Projeto: <span className="font-medium text-slate-800">{task.project_name || 'Desconhecido'}</span>
+              </p>
+            </div>
+          </div>
+          <button type="button" className="p-2.5 text-gray-400 hover:text-gray-700 hover:bg-white rounded-xl transition-colors cursor-pointer mt-1 shadow-sm border border-transparent hover:border-gray-200/60 bg-transparent">
+            <MoreHorizontal size={20} />
+          </button>
+        </div>        <div className="flex flex-col lg:flex-row gap-8 items-start">
+          {/* Main Column */}
+          <div className="flex-1 w-full space-y-6">
+            {/* Description Card */}
+            <div className="bg-white/80 backdrop-blur-xl border border-gray-200/60 p-7 rounded-3xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 m-0">Descrição</h3>
+              <p className="text-gray-600 leading-relaxed whitespace-pre-wrap text-[15px] m-0">
+                {task.description || <span className="italic opacity-60">Nenhuma descrição fornecida.</span>}
+              </p>
+            </div>
+
+            {/* Tabs Area */}
+            <div className="pt-2">
+              <PillSwitcher 
+                activeTab={activeTab} 
+                setActiveTab={setActiveTab} 
+                counts={{subtasks: task.subtasks?.length || 0, comments: task.comments?.length || 0, attachments: task.files?.length || 0}} 
+              />
+              
+              <div className="animate-in fade-in duration-300">
+                {/* Subtasks Tab */}
+                {activeTab === 'subtasks' && (
+                  <div>
+                    {podeAdicionarSubtarefa && (
+                      <div className="flex justify-end mb-4">
+                        <button 
+                          type="button"
+                          onClick={() => setShowSubtaskModal(true)} 
+                          className="bg-slate-900 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-800 transition-all shadow-md hover:shadow-lg flex items-center gap-2 cursor-pointer border-none"
+                        >
+                          <Plus size={16} /> Nova Subtarefa
+                        </button>
+                      </div>
+                    )}
+                    {(!task.subtasks || task.subtasks.length === 0) && (
+                      <div className="text-center p-8 bg-white/50 border border-dashed border-gray-300 rounded-2xl text-gray-500 text-sm">
+                        Nenhuma subtarefa criada ainda.
+                      </div>
+                    )}
+                    <div className="space-y-3">
+                      {task.subtasks?.map(subtask => {
+                        const isCompleted = subtask.status === 'CONCLUIDA';
+                        return (
+                          <div key={subtask.id} className="flex items-center justify-between p-4 bg-white border border-gray-200/60 rounded-2xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] hover:shadow-md transition-all group">
+                            <div className="flex items-center gap-4 flex-1 pl-2">
+                              <div>
+                                <h4 className={`text-[15px] font-bold transition-all m-0 ${isCompleted ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{subtask.name}</h4>
+                                {subtask.description && (
+                                  <p className={`text-[13px] mt-1 mb-0 ${isCompleted ? 'text-gray-400' : 'text-gray-500'}`}>{subtask.description}</p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <div className="relative">
+                                <select 
+                                  value={subtask.status} 
+                                  onChange={(e) => handleSubtaskStatusChange(subtask.id, e.target.value)}
+                                  className={`appearance-none text-[11px] font-bold px-3 py-1 pr-6 rounded-full border outline-none cursor-pointer transition-all bg-white ${getStatusBadge(subtask.status)} tracking-wide`}
+                                  style={{ WebkitAppearance: 'none', MozAppearance: 'none' }}
+                                >
+                                  <option value="PENDENTE">PENDENTE</option>
+                                  <option value="EM_ANDAMENTO">EM ANDAMENTO</option>
+                                  <option value="CONCLUIDA">CONCLUÍDA</option>
+                                </select>
+                                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none opacity-60" />
+                              </div>
+                              <button type="button" className="text-gray-400 hover:text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity p-1 cursor-pointer bg-transparent border-none">
+                                <MoreHorizontal size={18} />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Comments Tab */}
+                {activeTab === 'comments' && (
+                  <div>
+                    {commentError && <div className="text-red-600 bg-red-50 p-3 rounded-xl mb-4 text-sm border border-red-100">{commentError}</div>}
+                    <form onSubmit={handleCommentSubmit} className="mb-8 m-0">
+                      <div className="relative bg-white border border-gray-200/80 rounded-2xl shadow-sm focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-400 transition-all overflow-hidden">
+                        <textarea 
+                          placeholder="Adicione um comentário..." 
+                          value={newComment} 
+                          onChange={e => setNewComment(e.target.value)}
+                          className="w-full bg-transparent border-none px-5 pt-4 pb-14 text-[15px] text-gray-900 focus:outline-none focus:ring-0 min-h-[130px] resize-y box-border" 
+                        />
+                        <div className="absolute bottom-2 left-2 right-2 flex justify-end items-center bg-white p-1.5 rounded-xl">
+                          <button type="submit" disabled={commenting || !newComment.trim()} className="bg-slate-900 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition-all shadow-sm disabled:opacity-50 cursor-pointer border-none">
+                            {commenting ? 'Enviando...' : 'Enviar'}
+                          </button>
+                        </div>
+                      </div>
+                    </form>
+                    
+                    <div className="space-y-4">
+                      {(!task.comments || task.comments.length === 0) && (
+                        <div className="text-center p-8 text-gray-500 text-sm">Nenhum comentário.</div>
+                      )}
+                      {task.comments?.map(comment => (
+                        <div key={comment.id} className="flex gap-4 p-5 bg-white border border-gray-200/60 rounded-2xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)]">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-100 to-purple-100 border border-indigo-50 flex items-center justify-center flex-shrink-0 text-indigo-700 font-bold text-sm shadow-inner">
+                            {comment.user_name ? comment.user_name.charAt(0).toUpperCase() : 'U'}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1.5">
+                              <span className="font-bold text-gray-900 text-[15px]">{comment.user_name || 'Usuário'}</span>
+                              <span className="text-xs font-medium text-gray-400">{new Date(comment.date).toLocaleString('pt-BR')}</span>
+                            </div>
+                            <p className="text-gray-600 text-[15px] whitespace-pre-wrap leading-relaxed m-0">{comment.text}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Attachments Tab */}
+                {activeTab === 'attachments' && (
+                  <div>
+                    <div className="flex justify-end mb-4">
+                      <div>
+                        <input type="file" id="file-upload" className="hidden" onChange={e => { if (e.target.files[0]) handleFileUploadDirect(e.target.files[0]); }} />
+                        <label htmlFor="file-upload" className="bg-slate-900 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-800 transition-all shadow-md hover:shadow-lg flex items-center gap-2 cursor-pointer inline-flex m-0">
+                          {uploading ? 'Enviando...' : <><Upload size={16} /> Enviar Arquivo</>}
+                        </label>
+                      </div>
+                    </div>
+                    {uploadError && <div className="text-red-600 bg-red-50 p-3 rounded-xl mb-4 text-sm border border-red-100">{uploadError}</div>}
+                    
+                    {(!task.files || task.files.length === 0) && (
+                      <div className="text-center p-8 bg-white/50 border border-dashed border-gray-300 rounded-2xl text-gray-500 text-sm">
+                        Nenhum arquivo anexado.
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {task.files?.map(file => (
+                        <div key={file.id} className="p-4 bg-white border border-gray-200/60 rounded-2xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] flex items-center gap-4 hover:shadow-md transition-all group">
+                          <div className="w-12 h-12 rounded-xl bg-indigo-50/80 flex items-center justify-center text-indigo-500 border border-indigo-100/50">
+                            <Paperclip size={20} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <a href={`http://localhost:8000${file.file_path}`} target="_blank" rel="noreferrer" className="text-[14px] font-bold text-gray-900 truncate block hover:text-indigo-600 transition-colors mb-0.5">
+                              {file.file_name}
+                            </a>
+                            <span className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Por {file.user_name || 'Usuário'}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* --- Seção de Anexos --- */}
-          <div className="mb-10">
-            <div className="border-b border-gray-200 pb-2 mb-4">
-              <h3 className="text-gray-900 font-bold text-lg m-0 flex items-center gap-2">
-                <Paperclip size={18} />
-                Anexos
-              </h3>
-            </div>
-
-            <AttachmentList files={task.files} />
-
-            <div className="p-5 bg-gray-50 border border-dashed border-gray-300 rounded-lg">
-              <h4 className="text-gray-900 font-bold text-base mb-4 m-0">Adicionar Novo Anexo</h4>
-              {uploadError && <div className="text-red-600 bg-red-50 p-3 rounded-md mb-4 text-sm">{uploadError}</div>}
-              
-              <form onSubmit={handleFileUpload} className="flex items-center gap-3 flex-wrap">
-                <input 
-                  id="file-upload-input"
-                  type="file" 
-                  onChange={handleFileChange}
-                  className="flex-1 bg-white border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-500 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-900 file:text-white hover:file:bg-slate-800 box-border"
-                />
-                <button 
-                  type="submit" 
-                  disabled={!selectedFile || uploading}
-                  className={`flex items-center gap-2 bg-slate-900 text-white rounded-md px-4 py-2 text-sm font-medium border-none cursor-pointer ${(!selectedFile || uploading) ? 'opacity-70 cursor-not-allowed' : 'hover:bg-slate-800'}`}
+          {/* Metadata Column */}
+          <div className="w-full lg:w-[320px] shrink-0 space-y-4">
+            {/* Status Card */}
+            <div className="bg-white/80 backdrop-blur-xl border border-gray-200/60 p-5 rounded-3xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
+              <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 block">Status</label>
+              <div className="relative">
+                <select 
+                  value={task.status} 
+                  onChange={handleTaskStatusChange}
+                  className={`w-full appearance-none rounded-xl pl-4 pr-10 py-2.5 text-sm font-bold outline-none border transition-all cursor-pointer ${getStatusBadge(task.status)} bg-white`}
+                  style={{ WebkitAppearance: 'none', MozAppearance: 'none' }}
                 >
-                  <Upload size={16} />
-                  {uploading ? 'Enviando...' : 'Anexar'}
-                </button>
-              </form>
+                  <option value="PENDENTE">PENDENTE</option>
+                  <option value="EM_ANDAMENTO">EM ANDAMENTO</option>
+                  <option value="CONCLUIDA">CONCLUÍDA</option>
+                </select>
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none opacity-60" />
+              </div>
             </div>
-          </div>
-
-          {/* --- Seção de Comentários --- */}
-          <div>
-            <div className="border-b border-gray-200 pb-2 mb-4">
-              <h3 className="text-gray-900 font-bold text-lg m-0 flex items-center gap-2">
-                <MessageSquare size={18} />
-                Comentários
-              </h3>
+            
+            {/* Prazos Card */}
+            <div className="bg-white/80 backdrop-blur-xl border border-gray-200/60 p-5 rounded-3xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
+              <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4 block">Prazos</label>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-2.5 text-gray-500 font-medium">
+                    <Calendar size={16} className="text-gray-400" />
+                    Início
+                  </span>
+                  <span className="font-bold text-gray-900">{formatDate(task.start_date || task.created_at)}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-2.5 text-gray-500 font-medium">
+                    <Clock size={16} className="text-gray-400" />
+                    Término
+                  </span>
+                  <span className="font-bold text-gray-900">{formatDate(task.deadline)}</span>
+                </div>
+              </div>
             </div>
-
-            <CommentList comments={task.comments} />
-
-            <div className="p-5 bg-gray-50 border border-gray-200 rounded-lg">
-              <h4 className="text-gray-900 font-bold text-base mb-4 m-0">Adicionar Comentário</h4>
-              {commentError && <div className="text-red-600 bg-red-50 p-3 rounded-md mb-4 text-sm">{commentError}</div>}
-              
-              <form onSubmit={handleCommentSubmit} className="flex flex-col gap-3">
-                <textarea 
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Escreva seu comentário aqui..."
-                  className="w-full bg-white border border-gray-200 rounded-md px-3 py-3 text-sm text-gray-900 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-slate-900 box-border"
-                  required
-                />
-                <button 
-                  type="submit" 
-                  disabled={!newComment.trim() || commenting}
-                  className={`self-start bg-slate-900 text-white rounded-md px-4 py-2 text-sm font-medium border-none cursor-pointer ${(!newComment.trim() || commenting) ? 'opacity-70 cursor-not-allowed' : 'hover:bg-slate-800'}`}
-                >
-                  {commenting ? 'Enviando...' : 'Comentar'}
-                </button>
-              </form>
+            
+            {/* Assigned Card */}
+            <div className="bg-white/80 backdrop-blur-xl border border-gray-200/60 p-5 rounded-3xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
+              <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4 block">Atribuído a</label>
+              <div className="flex flex-wrap gap-2">
+                {task.participantes?.length ? (
+                  task.participantes.map(member => (
+                    <div key={member.id} className="flex items-center gap-2 bg-gray-50 border border-gray-200/80 rounded-full pr-3.5 p-1.5 shadow-sm">
+                      <div className="w-7 h-7 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold shadow-inner">
+                        {member.name ? member.name.charAt(0).toUpperCase() : 'U'}
+                      </div>
+                      <span className="text-sm font-semibold text-gray-700">{member.name || 'Usuário'}</span>
+                    </div>
+                  ))
+                ) : (
+                  <span className="text-sm text-gray-400 italic font-medium">Não atribuído</span>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      <SubtaskModal 
+        isOpen={showSubtaskModal} 
+        onClose={() => setShowSubtaskModal(false)} 
+        onSubmit={handleCreateSubtask} 
+        submitting={submittingSubtask} 
+        newSubtask={newSubtask} 
+        setNewSubtask={setNewSubtask} 
+        errorMsg={errorMsg} 
+      />
     </div>
   );
 }
