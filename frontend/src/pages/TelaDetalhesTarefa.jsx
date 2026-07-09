@@ -424,8 +424,8 @@ function TelaDetalhesTarefa() {
             <div className="bg-white/80 backdrop-blur-xl border border-gray-200/60 p-5 rounded-3xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
               <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4 block">Atribuído a</label>
               <div className="flex flex-wrap gap-2">
-                {task.assigned_to?.length ? (
-                  task.assigned_to.map(member => (
+                {task.participantes?.length ? (
+                  task.participantes.map(member => (
                     <div key={member.id} className="flex items-center gap-2 bg-gray-50 border border-gray-200/80 rounded-full pr-3.5 p-1.5 shadow-sm">
                       <div className="w-7 h-7 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold shadow-inner">
                         {member.name ? member.name.charAt(0).toUpperCase() : 'U'}
