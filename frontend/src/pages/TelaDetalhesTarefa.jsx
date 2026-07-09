@@ -41,30 +41,44 @@ const SubtaskModal = ({ isOpen, onClose, onSubmit, submitting, newSubtask, setNe
               <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
               <input type="text" value={newSubtask.name} onChange={e => setNewSubtask({...newSubtask, name: e.target.value})} className="w-full rounded-xl border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm focus:border-slate-500 focus:ring-1 focus:ring-slate-500 transition-all outline-none border box-border" required />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
-              <textarea value={newSubtask.description} onChange={e => setNewSubtask({...newSubtask, description: e.target.value})} className="w-full rounded-xl border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm focus:border-slate-500 focus:ring-1 focus:ring-slate-500 transition-all outline-none border min-h-[80px] box-border" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Data Início</label>
-                <input type="date" value={newSubtask.start_date || ''} onChange={e => setNewSubtask({...newSubtask, start_date: e.target.value})} className="w-full rounded-xl border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm focus:border-slate-500 focus:ring-1 focus:ring-slate-500 transition-all outline-none border box-border" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Data Término</label>
-                <input type="date" value={newSubtask.deadline} onChange={e => setNewSubtask({...newSubtask, deadline: e.target.value})} className="w-full rounded-xl border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm focus:border-slate-500 focus:ring-1 focus:ring-slate-500 transition-all outline-none border box-border" required />
-              </div>
-            </div>
-            <div className="pt-4 flex justify-end gap-3 border-t border-gray-100 mt-6">
-              <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer border-none bg-transparent">Cancelar</button>
-              <button type="submit" disabled={submitting} className="px-5 py-2 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-xl shadow-sm transition-all disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer border-none">
-                {submitting ? 'Criando...' : 'Criar'}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+          </div>
+          <div className="relative inline-block">
+            <select 
+              value={subtask.status} 
+              onChange={(e) => onStatusChange(subtask.id, e.target.value)}
+              className={`rounded-full pl-3 pr-7 py-0.5 text-xs font-semibold cursor-pointer border-none outline-none text-left appearance-none ${getTaskBadgeClass(subtask.status)}`}
+              style={{ WebkitAppearance: 'none', MozAppearance: 'none' }}
+            >
+              <option value="PENDENTE" className="text-gray-900 bg-white">PENDENTE</option>
+              <option value="EM_ANDAMENTO" className="text-gray-900 bg-white">EM ANDAMENTO</option>
+              <option value="CONCLUIDA" className="text-gray-900 bg-white">CONCLUÍDA</option>
+            </select>
+            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-current pointer-events-none opacity-70" />
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+};
+
+const AttachmentList = ({ files }) => {
+  if (!files || files.length === 0) {
+    return <p className="text-gray-500 text-sm italic mb-5">Nenhum arquivo anexado a esta tarefa.</p>;
+  }
+  return (
+    <ul className="list-none p-0 m-0 mb-4">
+      {files.map(anexo => (
+        <li key={anexo.id} className="bg-white border border-gray-200 rounded-lg p-4 mb-3 flex justify-between items-center">
+          <div>
+            <a href={`${anexo.file_path}`} target="_blank" rel="noreferrer" className="text-blue-600 font-bold hover:underline flex items-center gap-2 mb-1 text-sm">
+              <FileText size={16} />
+              {anexo.file_name}
+            </a>
+            <div className="text-xs text-gray-500">Enviado por: {anexo.user_name || 'Usuário'}</div>
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 };
 
