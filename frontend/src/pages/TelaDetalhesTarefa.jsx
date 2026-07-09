@@ -204,27 +204,7 @@ function TelaDetalhesTarefa() {
       <div className="absolute -top-[200px] -right-[200px] w-[600px] h-[600px] rounded-full bg-blue-100/30 blur-[80px] -z-10"></div>
       
       <div className="max-w-6xl mx-auto px-6 py-10">
-        {/* Breadcrumb + Header */}
-        <div className="flex items-start justify-between mb-10">
-          <div className="flex items-start gap-4">
-            <button 
-              type="button"
-              onClick={() => navigate(`/projetos/${projectId}/dashboard`)} 
-              className="mt-1 flex items-center justify-center w-9 h-9 rounded-full bg-white border border-gray-200/60 text-gray-500 hover:text-gray-900 hover:bg-gray-50 hover:shadow-sm transition-all cursor-pointer"
-            >
-              <ArrowLeft size={18} />
-            </button>
-            <div>
-              <div className="text-sm text-gray-400 font-medium mb-1 tracking-wide">
-                {task.project_name || 'Projeto'} <span className="mx-1">/</span> Tarefa #{taskId}
-              </div>
-              <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight leading-tight m-0">{task.name}</h1>
-            </div>
-          </div>
-          <button type="button" className="p-2.5 text-gray-400 hover:text-gray-700 hover:bg-white rounded-xl transition-colors cursor-pointer mt-2 shadow-sm border border-transparent hover:border-gray-200/60 bg-transparent">
-            <MoreHorizontal size={20} />
-          </button>
-        </div>
+
 
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           {/* Main Column */}
