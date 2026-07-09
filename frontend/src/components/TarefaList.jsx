@@ -41,9 +41,18 @@ export const TarefaList = ({ projetoId, searchTerm = '' }) => {
     return <div className="p-12 text-gray-500 text-[15px] text-center bg-white/50 border border-dashed border-gray-300 rounded-3xl">Nenhuma tarefa corresponde à sua busca.</div>;
   }
 
+  const sortedTarefas = [...filteredTarefas].sort((a, b) => {
+    const isDelayed = (t) => t.status !== 'CONCLUIDA' && t.deadline && new Date(t.deadline) < new Date();
+    const aDelayed = isDelayed(a);
+    const bDelayed = isDelayed(b);
+    if (aDelayed && !bDelayed) return -1;
+    if (!aDelayed && bDelayed) return 1;
+    return 0;
+  });
+
   return (
     <div className="flex flex-col gap-3 py-2">
-      {filteredTarefas.map((tarefa) => (
+      {sortedTarefas.map((tarefa) => (
         <TarefaCard 
           key={tarefa.id} 
           tarefa={tarefa} 

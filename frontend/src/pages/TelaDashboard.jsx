@@ -169,37 +169,9 @@ function TelaDashboard() {
             </div>
             
             {data.delayed_tasks && data.delayed_tasks.length > 0 ? (
-              <div className="flex flex-col gap-3 max-h-[220px] overflow-y-auto pr-2 custom-scrollbar">
-                {data.delayed_tasks.map(task => (
-                  <div 
-                    key={task.id} 
-                    className="flex flex-col p-4 border border-red-100/50 rounded-2xl bg-red-50/50 hover:bg-red-50 transition-colors cursor-pointer gap-2 group"
-                    onClick={() => navigate(`/projetos/${id}/tarefas/${task.id}`)}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <strong className="text-slate-900 text-[14px] line-clamp-1 group-hover:text-red-700 transition-colors">{task.name}</strong>
-                      
-                      <div className="relative inline-block shrink-0" onClick={e => e.stopPropagation()}>
-                        <select 
-                          value={task.status} 
-                          onChange={(e) => handleTaskStatusChange(task.id, e.target.value, e)}
-                          className={`appearance-none text-[10px] font-bold px-2 py-1 pr-5 rounded-full border outline-none cursor-pointer transition-all bg-white ${getStatusBadge(task.status)} tracking-wide`}
-                          style={{ WebkitAppearance: 'none', MozAppearance: 'none' }}
-                        >
-                          <option value="PENDENTE">PENDENTE</option>
-                          <option value="EM_ANDAMENTO">EM ANDAMENTO</option>
-                          <option value="CONCLUIDA">CONCLUÍDA</option>
-                        </select>
-                        <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none opacity-60" />
-                      </div>
-                    </div>
-                    
-                    <div className="text-red-600 text-[12px] font-bold flex items-center gap-1.5 uppercase tracking-wide">
-                      <Clock size={14} />
-                      Prazo: {formatDate(task.deadline)}
-                    </div>
-                  </div>
-                ))}
+              <div className="flex flex-col items-center justify-center h-32 text-center">
+                <p className="text-5xl font-extrabold text-red-600 m-0 mb-2">{data.delayed_tasks.length}</p>
+                <p className="text-gray-500 text-[15px] m-0 font-medium">tarefa(s) atrasada(s)</p>
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-32 text-center">
